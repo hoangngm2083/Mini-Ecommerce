@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @SQLDelete(sql = "UPDATE payments SET deleted_at = NOW() WHERE id=?")
 @SQLRestriction("deleted_at IS NULL")
 public class Payment extends BaseEntity {
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, nullable = false)
     @JoinColumn(name = "order_id")
     private Order order;
 

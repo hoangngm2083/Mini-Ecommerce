@@ -6,46 +6,33 @@ import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.Payment;
 import org.example.miniecommerce.factory.PaymentFactory;
 import org.example.miniecommerce.repository.PaymentRepository;
-import org.example.miniecommerce.service.order.OrderService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class PaymentService {
 
-    private final PaymentRepository paymentRepository;
-    private final OrderService orderService;
-    private final OrderLookupService orderLookupService; // helper to load Order by id (or use OrderRepository)
+    private final PaymentRepository repo;
+    private final OrderLookupService orderLookup;
 
-    public PaymentService(PaymentRepository paymentRepository,
-                          OrderService orderService,
-                          OrderLookupService orderLookupService) {
-        this.paymentRepository = paymentRepository;
-        this.orderService = orderService;
-        this.orderLookupService = orderLookupService;
+    public PaymentService(PaymentRepository repo, OrderLookupService orderLookup) {
+        this.repo = repo;
+        this.orderLookup = orderLookup;
     }
 
     @Transactional
     public Payment create(CreatePaymentRequest req) {
-        Order order = orderLookupService.findByIdOrThrow(req.orderId());
-        Payment payment = PaymentFactory.fromCreateRequest(req, order);
-        return paymentRepository.save(payment);
+        Order order = orderLookup.findByIdOrThrow(req.orderId());
+        Payment p = PaymentFactory.fromCreateRequest(req, order);
+        return repo.save(p);
     }
 
     @Transactional
     public Payment confirm(ConfirmPaymentRequest req) {
-        Optional<Payment> opt = paymentRepository.findById(req.paymentId());
-        Payment p = opt.orElseThrow(() -> new IllegalArgumentException("Payment not found"));
-        // idempotency: if already PAID and success -> return
+        Payment p = repo.findById(req.paymentId())
+            .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         if (p.getStatus() == Payment.Status.PAID && req.success()) return p;
         PaymentFactory.applyConfirm(p, req.success());
-        Payment saved = paymentRepository.save(p);
-        if (saved.getStatus() == Payment.Status.PAID) {
-            // notify order service
-            orderService.markPaid(saved.getOrder().getId());
-        }
-        return saved;
+        return repo.save(p);
     }
 }

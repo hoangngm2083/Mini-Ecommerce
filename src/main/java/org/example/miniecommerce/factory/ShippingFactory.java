@@ -28,7 +28,6 @@ public class ShippingFactory {
                 s.getOrder().setStatus(OrderStatus.DELIVERED);
             }
         }
-    }
         if (address != null) s.setAddress(address);
         if (city != null) s.setCity(city);
         if (postalCode != null) s.setPostalCode(postalCode);

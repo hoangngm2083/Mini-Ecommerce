@@ -26,7 +26,9 @@ class AdminApiService {
     static async createCategory(data) { return this.request('/api/categories', { method: 'POST', body: JSON.stringify(data) }); }
     static async updateCategory(id, data) { return this.request(`/api/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
     static async deleteCategory(id) { return this.request(`/api/categories/${id}`, { method: 'DELETE' }); }
-
+    static async getCategoryById(id) {
+        return this.request(`/api/categories/${id}`);
+    }
     static async getProducts(page = 0, size = 10, keyword = '', categoryId = '') {
         const params = new URLSearchParams({ page, size, keyword });
         if (categoryId) params.append('categoryId', categoryId);

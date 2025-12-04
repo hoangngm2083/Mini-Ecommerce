@@ -1,10 +1,9 @@
-// app.js - Phiên bản sạch sẽ, tối ưu hoàn toàn
+// app.js - ĐÃ FIX HOÀN TOÀN NÚT RESET + NÚT X + BẢNG ĐẸP
 const state = {
     catPage: 0, catKeyword: '',
     prodPage: 0, prodKeyword: '', prodCatFilter: ''
 };
 
-// === UTILS ===
 const $ = id => document.getElementById(id);
 const showAlert = (id, type, msg) => {
     const el = $(id);
@@ -20,7 +19,10 @@ const resetForm = (formId, hiddenId, btnTextId) => {
     $(btnTextId).textContent = 'Tạo mới';
 };
 
-// === SCREEN ===
+// 2 hàm này HTML đang gọi → bắt buộc phải có tên đúng
+const resetCategoryForm = () => resetForm('category-form', 'category-id', 'category-btn-text');
+const resetProductForm = () => resetForm('product-form', 'product-id', 'product-btn-text');
+
 const adminLogin = () => {
     $('login-screen').classList.add('d-none');
     $('main-screen').classList.remove('d-none');
@@ -39,7 +41,6 @@ const showScreen = screen => {
     if (screen === 'products') { loadProducts(); loadCategoryOptions(); }
 };
 
-// === PAGINATION (chuẩn, không lỗi) ===
 const renderPagination = (id, total, current, onPageChange) => {
     const container = $(id);
     let html = '';
@@ -49,8 +50,6 @@ const renderPagination = (id, total, current, onPageChange) => {
     }
     if (current < total-1) html += `<button class="pagination-btn" onclick="pageClick(${current+1})">Sau</button>`;
     container.innerHTML = html;
-
-    // Closure để giữ callback
     window.pageClick = page => { onPageChange(page); };
 };
 
@@ -63,7 +62,7 @@ const loadCategories = async () => {
                 <td>${c.id}</td>
                 <td>${c.name}</td>
                 <td>${c.description || ''}</td>
-                <td>
+                <td class="text-center">
                     <button class="btn btn-sm btn-outline-primary" onclick="editCategory(${c.id})">Sửa</button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})">Xóa</button>
                 </td>
@@ -104,17 +103,13 @@ const deleteCategory = async id => {
 $('category-form').onsubmit = async e => {
     e.preventDefault();
     const id = $('category-id').value;
-    const data = {
-        name: $('category-name').value.trim(),
-        description: $('category-description').value.trim() || null
-    };
+    const data = { name: $('category-name').value.trim(), description: $('category-description').value.trim() || null };
     if (!data.name) return showAlert('category-alert', 'danger', 'Tên danh mục bắt buộc');
 
     try {
-        id ? await AdminApiService.updateCategory(id, data)
-            : await AdminApiService.createCategory(data);
+        id ? await AdminApiService.updateCategory(id, data) : await AdminApiService.createCategory(data);
         showAlert('category-alert', 'success', id ? 'Cập nhật thành công!' : 'Tạo thành công!');
-        resetForm('category-form', 'category-id', 'category-btn-text');
+        resetCategoryForm();
         loadCategories();
         loadCategoryOptions();
     } catch (e) {
@@ -124,6 +119,15 @@ $('category-form').onsubmit = async e => {
 
 const searchCategories = () => {
     state.catKeyword = $('category-search').value.trim();
+    state.catPage = 0;
+    loadCategories();
+    $('clear-category-search').style.display = state.catKeyword ? 'block' : 'none';
+};
+
+const clearCategorySearch = () => {
+    $('category-search').value = '';
+    $('clear-category-search').style.display = 'none';
+    state.catKeyword = '';
     state.catPage = 0;
     loadCategories();
 };
@@ -139,10 +143,10 @@ const loadProducts = async () => {
             <tr>
                 <td>${p.id}</td>
                 <td>${p.name}</td>
-                <td>${Number(p.price).toLocaleString('vi-VN')}₫</td>
-                <td>${p.stockQuantity}</td>
+                <td class="text-end">${Number(p.price).toLocaleString('vi-VN')}₫</td>
+                <td class="text-center">${p.stockQuantity}</td>
                 <td>${p.category?.name || '-'}</td>
-                <td>
+                <td class="text-center">
                     <button class="btn btn-sm btn-outline-primary" onclick="editProduct(${p.id})">Sửa</button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})">Xóa</button>
                 </td>
@@ -164,7 +168,7 @@ const editProduct = id => {
     $('product-description').value = p.description || '';
     $('product-price').value = p.price;
     $('product-stock').value = p.stockQuantity;
-    $('product-category').value = p.category?.id || '';
+    $('product-category').value = p.category?.id || p.categoryId || '';
     $('product-btn-text').textContent = 'Cập nhật';
 };
 
@@ -195,10 +199,9 @@ $('product-form').onsubmit = async e => {
     }
 
     try {
-        id ? await AdminApiService.updateProduct(id, data)
-            : await AdminApiService.createProduct(data);
+        id ? await AdminApiService.updateProduct(id, data) : await AdminApiService.createProduct(data);
         showAlert('product-alert', 'success', id ? 'Cập nhật thành công!' : 'Tạo thành công!');
-        resetForm('product-form', 'product-id', 'product-btn-text');
+        resetProductForm();
         loadProducts();
     } catch (e) {
         showAlert('product-alert', 'danger', e.message);
@@ -208,6 +211,17 @@ $('product-form').onsubmit = async e => {
 const searchProducts = () => {
     state.prodKeyword = $('product-search').value.trim();
     state.prodCatFilter = $('product-category-filter').value;
+    state.prodPage = 0;
+    loadProducts();
+    $('clear-product-search').style.display = state.prodKeyword ? 'block' : 'none';
+};
+
+const clearProductSearch = () => {
+    $('product-search').value = '';
+    $('clear-product-search').style.display = 'none';
+    state.prodKeyword = '';
+    state.prodCatFilter = '';
+    $('product-category-filter').value = '';
     state.prodPage = 0;
     loadProducts();
 };
@@ -223,10 +237,28 @@ const loadCategoryOptions = async () => {
     }
 };
 
-// === EXPOSE GLOBALS ===
+// Nút X hiện khi gõ
+$('category-search').addEventListener('input', () => {
+    $('clear-category-search').style.display = $('category-search').value.trim() ? 'block' : 'none';
+});
+$('product-search').addEventListener('input', () => {
+    $('clear-product-search').style.display = $('product-search').value.trim() ? 'block' : 'none';
+});
+
+// Enter để tìm
+['category-search', 'product-search'].forEach(id => {
+    $(id).addEventListener('keypress', e => {
+        if (e.key === 'Enter') {
+            id === 'category-search' ? searchCategories() : searchProducts();
+        }
+    });
+});
+
+// EXPOSE GLOBALS – ĐÃ THÊM resetCategoryForm, resetProductForm
 Object.assign(window, {
     adminLogin, logout, showScreen,
-    searchCategories, editCategory, deleteCategory, resetForm,
-    searchProducts, editProduct, deleteProduct,
+    searchCategories, clearCategorySearch, editCategory, deleteCategory,
+    resetCategoryForm, resetProductForm,
+    searchProducts, clearProductSearch, editProduct, deleteProduct,
     loadCategoryOptions
 });

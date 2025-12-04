@@ -1,138 +1,43 @@
-// API Configuration
-const API_CONFIG = {
-    BASE_URL: 'http://localhost:8081', // Change this to your backend URL
-    ENDPOINTS: {
-        PRODUCTS: '/api/products',
-        ORDERS: '/api/orders',
-        AUTH: '/api/auth'
-    }
-};
+// api.js
+const API_BASE = 'http://localhost:8081';
 
-// Global user state (simulated authentication)
-let currentUser = null;
-
-// API Utility Functions
-class ApiService {
-    static async makeRequest(url, options = {}) {
-        const fullUrl = API_CONFIG.BASE_URL + url;
-
-        // Merge headers properly
-        const defaultHeaders = {
-            'Content-Type': 'application/json'
-        };
-
-        const finalHeaders = { ...defaultHeaders, ...options.headers };
-
-        const finalOptions = {
+class AdminApiService {
+    static async request(url, options = {}) {
+        const res = await fetch(API_BASE + url, {
             ...options,
-            headers: finalHeaders
-        };
-
-        try {
-            const response = await fetch(fullUrl, finalOptions);
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-
-    // Product APIs
-    static async searchProducts(keyword = '', page = 0, size = 10) {
-        const params = new URLSearchParams({
-            page: page.toString(),
-            size: size.toString()
-        });
-
-        if (keyword.trim()) {
-            params.append('keyword', keyword.trim());
-        }
-
-        return await this.makeRequest(`${API_CONFIG.ENDPOINTS.PRODUCTS}?${params}`);
-    }
-
-    static async getProduct(productId) {
-        return await this.makeRequest(`${API_CONFIG.ENDPOINTS.PRODUCTS}/${productId}`);
-    }
-
-    // Order APIs
-    static async createOrder(orderItems) {
-        if (!currentUser || !currentUser.id) {
-            throw new Error('User not authenticated');
-        }
-        
-
-        const requestBody = {
-            items: orderItems
-        };
-
-        return await this.makeRequest(API_CONFIG.ENDPOINTS.ORDERS, {
-            method: 'POST',
             headers: {
-                'userId': currentUser.id.toString()
+                'Content-Type': 'application/json',
+                ...options.headers
             },
-            body: JSON.stringify(requestBody)
+            credentials: 'include'
         });
-    }
 
-    static async getUserOrders() {
-        if (!currentUser || !currentUser.id) {
-            throw new Error('User not authenticated');
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || 'Lỗi server');
         }
-
-        return await this.makeRequest(`${API_CONFIG.ENDPOINTS.ORDERS}/me`, {
-            headers: {
-                'userId': currentUser.id.toString()
-            }
-        });
+        return res.json();
     }
 
-    // Authentication APIs (simulated)
-    static async login(credentials) {
-        // Simulated login - in real app, this would call actual API
-        const response = await this.makeRequest(API_CONFIG.ENDPOINTS.AUTH + '/login', {
-            method: 'POST',
-            body: JSON.stringify(credentials)
-        });
-
-        currentUser = response.user;
-        return response;
+    // === CATEGORY ===
+    static async getCategories(page = 0, size = 10, keyword = '') {
+        const params = new URLSearchParams({ page, size, keyword });
+        return this.request(`/api/categories?${params}`);
     }
+    static async createCategory(data) { return this.request('/api/categories', { method: 'POST', body: JSON.stringify(data) }); }
+    static async updateCategory(id, data) { return this.request(`/api/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
+    static async deleteCategory(id) { return this.request(`/api/categories/${id}`, { method: 'DELETE' }); }
+    static async getCategoryById(id) { return this.request(`/api/categories/${id}`); } // ĐÃ THÊM
 
-    static async register(userData) {
-        // Simulated register - in real app, this would call actual API
-        const response = await this.makeRequest(API_CONFIG.ENDPOINTS.AUTH + '/register', {
-            method: 'POST',
-            body: JSON.stringify(userData)
-        });
-
-        currentUser = response.user;
-        return response;
+    // === PRODUCT ===
+    static async getProducts(page = 0, size = 10, keyword = '', categoryId = '') {
+        const params = new URLSearchParams({ page, size, keyword });
+        if (categoryId) params.append('categoryId', categoryId);
+        return this.request(`/api/products?${params}`);
     }
-
-    // User management
-    static setCurrentUser(user) {
-        currentUser = user;
-    }
-
-    static getCurrentUser() {
-        return currentUser;
-    }
-
-    static logout() {
-        currentUser = null;
-    }
-
-    static isAuthenticated() {
-        return currentUser !== null;
-    }
+    static async createProduct(data) { return this.request('/api/products', { method: 'POST', body: JSON.stringify(data) }); }
+    static async updateProduct(id, data) { return this.request(`/api/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
+    static async deleteProduct(id) { return this.request(`/api/products/${id}`, { method: 'DELETE' }); }
 }
 
-// Export for use in other files
-window.ApiService = ApiService;
+window.AdminApiService = AdminApiService;

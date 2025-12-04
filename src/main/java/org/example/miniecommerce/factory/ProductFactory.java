@@ -1,8 +1,10 @@
 package org.example.miniecommerce.factory;
 
+import org.example.miniecommerce.dto.category.CategoryResponse;
 import org.example.miniecommerce.dto.product.CreateProductRequest;
 import org.example.miniecommerce.dto.product.ProductResponse;
 import org.example.miniecommerce.dto.product.UpdateProductRequest;
+
 import org.example.miniecommerce.entity.Category;
 import org.example.miniecommerce.entity.Product;
 
@@ -26,13 +28,25 @@ public class ProductFactory {
     }
 
     public static ProductResponse toResponse(Product p) {
+        CategoryResponse categoryResponse ;
+        if (p.getCategory() != null) {
+            categoryResponse = new CategoryResponse(
+                    p.getCategory().getId(),
+                    p.getCategory().getName(),
+                    p.getCategory().getDescription()
+            );
+        }else{
+            categoryResponse = null;
+        }
+
         return new ProductResponse(
                 p.getId(),
                 p.getName(),
                 p.getDescription(),
                 p.getPrice(),
                 p.getStockQuantity(),
-                p.getCategoryId()
+                p.getCategory() != null ? p.getCategory().getId() : null, // categoryId
+                categoryResponse
         );
     }
 }

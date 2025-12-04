@@ -93,24 +93,21 @@ CREATE TABLE payments
 CREATE TABLE shipments
 (
     id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
-    order_id             BIGINT,
-    carrier_name         VARCHAR(100)                               NOT NULL,
-    tracking_number      VARCHAR(100)                                        DEFAULT NULL,
-    delivery_address     VARCHAR(255),
-    city                 VARCHAR(100),
-    postal_code          VARCHAR(50),
-    country              VARCHAR(100),
-    shipping_cost        DECIMAL(12, 2)                                     DEFAULT 0,
-    status               ENUM ('PROCESSING','SHIPPED','IN_TRANSIT','DELIVERED','LOST','DAMAGED','CANCELLED') NOT NULL DEFAULT 'PROCESSING',
+    order_id             BIGINT NOT NULL,
+    shipped_by           BIGINT DEFAULT NULL,
+    address     VARCHAR(255),
+    method               ENUM ('STANDARD','EXPRESS') NOT NULL DEFAULT 'STANDARD',
+    fee                  DECIMAL(12, 2)                          NOT NULL, 
+    status               ENUM ('CREATED','SHIPPING','COMPLETED','REJECTED') NOT NULL DEFAULT 'CREATED',
     shipped_at           DATETIME                                           DEFAULT NULL,
-    expected_delivery_date DATETIME                                          DEFAULT NULL,
-    delivered_at         DATETIME                                           DEFAULT NULL,
+    delivered_at         DATETIME                                          DEFAULT NULL,
     notes                VARCHAR(255)                                       DEFAULT NULL,
     created_at           DATETIME                                           DEFAULT CURRENT_TIMESTAMP,
     updated_at           DATETIME                                           DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at           DATETIME                                           DEFAULT NULL,
     CONSTRAINT fk_shipment_order FOREIGN KEY (order_id) REFERENCES orders (id),
-    INDEX idx_carrier (carrier_name),
+    CONSTRAINT fk_shipment_carrier FOREIGN KEY (shipped_by) REFERENCES users (id),
+    INDEX idx_carrier (shipped_by),
     INDEX idx_status (status),
     INDEX idx_shipped_at (shipped_at)
 );
@@ -279,26 +276,26 @@ VALUES
 -- Additional failed payment for analytics
 (1, 200000, 'E_WALLET', 'FAILED', NULL, '2024-01-14');
 
--- SHIPMENTS (with dates matching orders, various carriers, and statuses)
-INSERT INTO shipments (order_id, carrier_name, tracking_number, delivery_address, city, postal_code, country, shipping_cost, status, shipped_at, expected_delivery_date, delivered_at, created_at)
+-- SHIPMENTS (Cập nhật theo schema mới với dữ liệu tiếng Việt - Tất cả TP.HCM)
+INSERT INTO shipments (order_id, shipped_by, address, method, fee, status, shipped_at, delivered_at, notes, created_at)
 VALUES
--- January shipments
-(1, 'GRAB', 'GRAB001', '123 Green St', 'Hanoi', '100000', 'Vietnam', 25000, 'DELIVERED', '2024-01-16', '2024-01-18', '2024-01-17', '2024-01-15'),
-(2, 'GIAO_HANG_NHANH', 'GHN002', '456 Blue Rd', 'Ho Chi Minh City', '700000', 'Vietnam', 30000, 'DELIVERED', '2024-01-21', '2024-01-23', '2024-01-22', '2024-01-20'),
--- April shipments
-(3, 'VIETTEL_POST', 'VTP003', '789 Red Ave', 'Da Nang', '550000', 'Vietnam', 28000, 'DELIVERED', '2024-04-11', '2024-04-13', '2024-04-13', '2024-04-10'),
-(4, 'GRAB', 'GRAB004', '321 Yellow Ln', 'Hanoi', '100001', 'Vietnam', 32000, 'DELIVERED', '2024-04-26', '2024-04-28', '2024-04-28', '2024-04-25'),
--- July shipments
-(5, 'GIAO_HANG_NHANH', 'GHN005', '654 Purple Dr', 'Ho Chi Minh City', '700001', 'Vietnam', 25000, 'DELIVERED', '2024-07-09', '2024-07-11', '2024-07-10', '2024-07-08'),
-(6, 'VIETTEL_POST', 'VTP006', '987 Orange Ct', 'Hanoi', '100002', 'Vietnam', 29000, 'DELIVERED', '2024-07-23', '2024-07-25', '2024-07-24', '2024-07-22'),
--- October shipments
-(7, 'GRAB', 'GRAB007', '654 Pink Dr', 'Hanoi', '100003', 'Vietnam', 26000, 'DELIVERED', '2024-10-06', '2024-10-08', '2024-10-08', '2024-10-05'),
-(8, 'GIAO_HANG_NHANH', 'GHN008', '789 Blue Ave', 'Ho Chi Minh City', '700002', 'Vietnam', 31000, 'DELIVERED', '2024-10-19', '2024-10-21', '2024-10-20', '2024-10-18'),
--- Recent shipments (current month)
-(9, 'GRAB', 'GRAB009', '123 Brown St', 'Hanoi', '100004', 'Vietnam', 27000, 'DELIVERED', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 0 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(10, 'VIETTEL_POST', 'VTP010', '456 Green Ln', 'Ho Chi Minh City', '700003', 'Vietnam', 30000, 'IN_TRANSIT', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_ADD(NOW(), INTERVAL 1 DAY), NULL, DATE_SUB(NOW(), INTERVAL 2 DAY)),
--- Pending order without shipment (will be created later or not)
-(11, 'GRAB', 'GRAB011', '789 Red St', 'Da Nang', '550001', 'Vietnam', 28000, 'PROCESSING', NULL, DATE_ADD(NOW(), INTERVAL 3 DAY), NULL, DATE_SUB(NOW(), INTERVAL 1 DAY));
+-- Tháng 1/2024 - Đơn hàng đã hoàn thành
+(1, 1, '123 Đường Nguyễn Du, Phường Bến Nghé, Quận 1, TP.HCM', 'STANDARD', 25000.00, 'COMPLETED', '2024-01-16 10:00:00', '2024-01-17 14:30:00', 'Giao hàng thành công, khách hài lòng', '2024-01-15 09:00:00'),
+(2, 1, '456 Đường Lê Lợi, Phường 4, Quận Tân Bình, TP.HCM', 'STANDARD', 30000.00, 'COMPLETED', '2024-01-21 11:15:00', '2024-01-22 16:45:00', 'Khách nhận hàng tại nhà', '2024-01-20 08:30:00'),
+-- Tháng 4/2024 - Đơn hàng đã hoàn thành
+(3, 1, '789 Đường Trần Hưng Đạo, Phường Cô Giang, Quận 1, TP.HCM', 'EXPRESS', 45000.00, 'COMPLETED', '2024-04-11 09:30:00', '2024-04-13 13:20:00', 'Giao hàng đúng hẹn', '2024-04-10 14:00:00'),
+(4, 1, '321 Đường Hoàng Quốc Việt, Phường Phú Trung, Quận Tân Phú, TP.HCM', 'STANDARD', 28000.00, 'COMPLETED', '2024-04-26 08:45:00', '2024-04-28 12:10:00', 'Khách hàng feedback tốt', '2024-04-25 10:15:00'),
+-- Tháng 7/2024 - Đơn hàng đã hoàn thành
+(5, 1, '654 Đường Phạm Ngũ Lão, Phường Phạm Ngũ Lão, Quận 1, TP.HCM', 'EXPRESS', 42000.00, 'COMPLETED', '2024-07-09 15:20:00', '2024-07-10 11:30:00', 'Giao hàng nhanh chóng', '2024-07-08 13:45:00'),
+(6, 1, '987 Đường Lý Thường Kiệt, Phường 7, Quận Tân Bình, TP.HCM', 'STANDARD', 31000.00, 'COMPLETED', '2024-07-23 10:00:00', '2024-07-24 17:15:00', 'Hoàn thành xuất sắc', '2024-07-22 09:30:00'),
+-- Tháng 10/2024 - Đơn hàng đã hoàn thành
+(7, 1, '654 Đường Bà Triệu, Phường Đa Kao, Quận 1, TP.HCM', 'EXPRESS', 48000.00, 'COMPLETED', '2024-10-06 14:30:00', '2024-10-08 10:45:00', 'Khách hàng rất hài lòng', '2024-10-05 11:20:00'),
+(8, 1, '789 Đường Võ Văn Tần, Phường 5, Quận 3, TP.HCM', 'STANDARD', 26000.00, 'COMPLETED', '2024-10-19 09:15:00', '2024-10-20 16:20:00', 'Giao hàng đúng địa chỉ', '2024-10-18 08:00:00'),
+-- Đơn hàng gần đây (tháng hiện tại)
+(9, 1, '123 Đường Cách Mạng Tháng 8, Phường Bến Thành, Quận 1, TP.HCM', 'EXPRESS', 50000.00, 'COMPLETED', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 HOUR), 'Đơn hàng giao thành công', DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(10, 1, '456 Đường Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM', 'STANDARD', 35000.00, 'SHIPPING', DATE_SUB(NOW(), INTERVAL 2 DAY), NULL, 'Đang vận chuyển đến khách hàng', DATE_SUB(NOW(), INTERVAL 2 DAY)),
+-- Đơn hàng mới tạo - chưa giao
+(11, NULL, '789 Đường Hùng Vương, Phường Nguyễn Thái Bình, Quận 1, TP.HCM', 'STANDARD', 0.00, 'CREATED', NULL, NULL, 'Chờ xử lý đơn hàng', DATE_SUB(NOW(), INTERVAL 1 DAY));
 
 
 

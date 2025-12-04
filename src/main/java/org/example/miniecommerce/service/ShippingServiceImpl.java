@@ -5,10 +5,11 @@ import org.example.miniecommerce.dto.shipping.CreateShipmentRequest;
 import org.example.miniecommerce.dto.shipping.UpdateShipmentRequest;
 import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.Shipping;
+import org.example.miniecommerce.entity.User;
 import org.example.miniecommerce.factory.ShippingFactory;
 import org.example.miniecommerce.repository.ShippingRepository;
+import org.example.miniecommerce.repository.UserRepository;
 import org.example.miniecommerce.service.order.OrderService;
-import org.example.miniecommerce.service.order.decorator.OrderDecoratorName;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,15 +20,19 @@ public class ShippingServiceImpl implements ShippingService {
     private final ShippingRepository repo;
     private final OrderLookupService orderLookup;
     private final OrderService orderService;
+    private final UserRepository userRepository;
 
 
     @Override
     @Transactional
     public Shipping create(CreateShipmentRequest req) {
         Order order = orderLookup.findByIdOrThrow(req.orderId());
-        Shipping s = ShippingFactory.fromCreateRequest(req, order);
-        // Cập nhật giá phí lên order
-        orderService.addFee(req.orderId(), OrderDecoratorName.SHIPPING, req.shippingCost());
+        User shippedBy = null;
+        if (req.shippedBy() != null) {
+            shippedBy = userRepository.findById(req.shippedBy())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        }
+        Shipping s = ShippingFactory.fromCreateRequest(req, order, shippedBy);
         orderService.handleShipmentCreated(order.getId());
         repo.save(s);
 
@@ -44,13 +49,19 @@ public class ShippingServiceImpl implements ShippingService {
         Shipping s = repo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Shipping not found"));
 
-        ShippingFactory.applyUpdate(s, req);
+        User shippedBy = null;
+        if (req.shippedBy() != null) {
+            shippedBy = userRepository.findById(req.shippedBy())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        }
+
+        ShippingFactory.applyUpdate(s, req, shippedBy);
 
         switch (s.getStatus()) {
-            case IN_TRANSIT:
+            case SHIPPING:
                 orderService.handleShipmentStarted(s.getOrderId());
                 break;
-            case DELIVERED:
+            case COMPLETED:
                 orderService.handleShipmentDelivered(s.getOrderId());
                 break;
             default:

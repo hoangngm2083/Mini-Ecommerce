@@ -17,34 +17,27 @@ public class ShippingRepository {
     }
 
     public void save(Shipping shipping) {
-        String sql = "INSERT INTO shipments (order_id, carrier_name, tracking_number, delivery_address, city, postal_code, country, shipping_cost, status, created_at, updated_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO shipments (order_id, shipped_by, address, method, fee, status, created_at, updated_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
         jdbcTemplate.update(sql,
             shipping.getOrderId(),
-            shipping.getCarrierName(),
-            shipping.getTrackingNumber(),
-            shipping.getDeliveryAddress(),
-            shipping.getCity(),
-            shipping.getPostalCode(),
-            shipping.getCountry(),
-            shipping.getShippingCost(),
+            shipping.getShippedById(),
+            shipping.getAddress(),
+            shipping.getMethod().name(),
+            shipping.getFee(),
             shipping.getStatus().name()
         );
     }
 
     public void update(Shipping shipping) {
-        String sql = "UPDATE shipments SET carrier_name = ?, tracking_number = ?, delivery_address = ?, city = ?, postal_code = ?, country = ?, shipping_cost = ?, status = ?, shipped_at = ?, expected_delivery_date = ?, delivered_at = ?, notes = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE shipments SET shipped_by = ?, address = ?, method = ?, fee = ?, status = ?, shipped_at = ?, delivered_at = ?, notes = ?, updated_at = NOW() WHERE id = ?";
         jdbcTemplate.update(sql,
-            shipping.getCarrierName(),
-            shipping.getTrackingNumber(),
-            shipping.getDeliveryAddress(),
-            shipping.getCity(),
-            shipping.getPostalCode(),
-            shipping.getCountry(),
-            shipping.getShippingCost(),
+            shipping.getShippedById(),
+            shipping.getAddress(),
+            shipping.getMethod().name(),
+            shipping.getFee(),
             shipping.getStatus().name(),
             shipping.getShippedAt(),
-            shipping.getExpectedDeliveryDate(),
             shipping.getDeliveredAt(),
             shipping.getNotes(),
             shipping.getId()
@@ -52,24 +45,18 @@ public class ShippingRepository {
     }
 
     public Optional<Shipping> findById(Long id) {
-        String sql = "SELECT id, order_id, carrier_name, tracking_number, delivery_address, city, postal_code, country, shipping_cost, status, shipped_at, expected_delivery_date, delivered_at, notes, created_at, updated_at FROM shipments WHERE id = ?";
+        String sql = "SELECT id, order_id, shipped_by, address, method, fee, status, shipped_at, delivered_at, notes, created_at, updated_at FROM shipments WHERE id = ?";
         List<Shipping> results = jdbcTemplate.query(sql, ps -> ps.setLong(1, id), (rs, rowNum) -> {
             Shipping s = new Shipping();
             s.setId(rs.getLong("id"));
             s.setOrderId(rs.getLong("order_id"));
-            s.setCarrierName(rs.getString("carrier_name"));
-            s.setTrackingNumber(rs.getString("tracking_number"));
-            s.setDeliveryAddress(rs.getString("delivery_address"));
-            s.setCity(rs.getString("city"));
-            s.setPostalCode(rs.getString("postal_code"));
-            s.setCountry(rs.getString("country"));
-            s.setShippingCost(rs.getBigDecimal("shipping_cost"));
+            s.setShippedById(rs.getLong("shipped_by"));
+            s.setAddress(rs.getString("address"));
+            s.setMethod(Shipping.Method.valueOf(rs.getString("method")));
+            s.setFee(rs.getBigDecimal("fee"));
             s.setStatus(Shipping.Status.valueOf(rs.getString("status")));
             if (rs.getTimestamp("shipped_at") != null) {
                 s.setShippedAt(rs.getTimestamp("shipped_at").toLocalDateTime());
-            }
-            if (rs.getTimestamp("expected_delivery_date") != null) {
-                s.setExpectedDeliveryDate(rs.getTimestamp("expected_delivery_date").toLocalDateTime());
             }
             if (rs.getTimestamp("delivered_at") != null) {
                 s.setDeliveredAt(rs.getTimestamp("delivered_at").toLocalDateTime());
@@ -87,24 +74,18 @@ public class ShippingRepository {
     }
 
     public List<Shipping> findByOrderId(Long orderId) {
-        String sql = "SELECT id, order_id, carrier_name, tracking_number, delivery_address, city, postal_code, country, shipping_cost, status, shipped_at, expected_delivery_date, delivered_at, notes, created_at, updated_at FROM shipments WHERE order_id = ?";
+        String sql = "SELECT id, order_id, shipped_by, address, method, fee, status, shipped_at, delivered_at, notes, created_at, updated_at FROM shipments WHERE order_id = ?";
         return jdbcTemplate.query(sql, ps -> ps.setLong(1, orderId), (rs, rowNum) -> {
             Shipping s = new Shipping();
             s.setId(rs.getLong("id"));
             s.setOrderId(rs.getLong("order_id"));
-            s.setCarrierName(rs.getString("carrier_name"));
-            s.setTrackingNumber(rs.getString("tracking_number"));
-            s.setDeliveryAddress(rs.getString("delivery_address"));
-            s.setCity(rs.getString("city"));
-            s.setPostalCode(rs.getString("postal_code"));
-            s.setCountry(rs.getString("country"));
-            s.setShippingCost(rs.getBigDecimal("shipping_cost"));
+            s.setShippedById(rs.getLong("shipped_by"));
+            s.setAddress(rs.getString("address"));
+            s.setMethod(Shipping.Method.valueOf(rs.getString("method")));
+            s.setFee(rs.getBigDecimal("fee"));
             s.setStatus(Shipping.Status.valueOf(rs.getString("status")));
             if (rs.getTimestamp("shipped_at") != null) {
                 s.setShippedAt(rs.getTimestamp("shipped_at").toLocalDateTime());
-            }
-            if (rs.getTimestamp("expected_delivery_date") != null) {
-                s.setExpectedDeliveryDate(rs.getTimestamp("expected_delivery_date").toLocalDateTime());
             }
             if (rs.getTimestamp("delivered_at") != null) {
                 s.setDeliveredAt(rs.getTimestamp("delivered_at").toLocalDateTime());

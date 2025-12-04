@@ -19,44 +19,42 @@ import java.time.LocalDateTime;
 
 public class Shipping extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     @Column(name = "order_id", insertable = false, updatable = false)
     private Long orderId;
 
-    @Column(name = "carrier_name", nullable = false)
-    private String carrierName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shipped_by")
+    private User shippedBy;
 
-    @Column(name = "tracking_number")
-    private String trackingNumber;
+    @Column(name = "shipped_by", insertable = false, updatable = false)
+    private Long shippedById;
 
-    @Column(name = "delivery_address")
-    private String deliveryAddress;
-
-    private String city;
-    private String postalCode;
-    private String country;
-
-    @Column(name = "shipping_cost", precision = 12, scale = 2)
-    private BigDecimal shippingCost = BigDecimal.ZERO;
+    @Column(name = "address")
+    private String address;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status = Status.PROCESSING;
+    private Method method = Method.STANDARD;
+
+    @Column(name = "fee", precision = 12, scale = 2, nullable = false)
+    private BigDecimal fee = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status = Status.CREATED;
 
     @Column(name = "shipped_at")
     private LocalDateTime shippedAt;
 
-    @Column(name = "expected_delivery_date")
-    private LocalDateTime expectedDeliveryDate;
-
     @Column(name = "delivered_at")
     private LocalDateTime deliveredAt;
 
-
     private String notes;
 
-    public enum Status {PROCESSING, SHIPPED, IN_TRANSIT, DELIVERED, LOST, DAMAGED, CANCELLED}
+    public enum Status {CREATED, SHIPPING, COMPLETED, REJECTED}
+    public enum Method {STANDARD, EXPRESS}
 
 }

@@ -1,9 +1,6 @@
 package org.example.miniecommerce.dto.shipping;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-public record UpdateShipmentRequest(String carrierName, String trackingNumber, String status, String address,
-                                    String city, String postalCode, String country, BigDecimal shippingCost,
-                                    LocalDateTime expectedDeliveryDate, String notes) {
+public record UpdateShipmentRequest(Long shippedBy, String method, BigDecimal fee, String status, String address, String notes) {
 }

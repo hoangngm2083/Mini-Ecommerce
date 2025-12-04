@@ -1,0 +1,150 @@
+/* Custom styles for Mini Ecommerce UI */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Screen Management */
+#login-screen, #main-screen {
+    display: none;
+}
+
+#login-screen.show, #main-screen.show {
+    display: block !important;
+}
+
+/* Main Screen Layout */
+#cart-section {
+    min-height: 100%;
+    position: sticky;
+    top: 0;
+}
+
+#products-screen, #orders-screen {
+    height: 100%;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background: white;
+}
+
+.cart-item-info {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.quantity-controls button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #dee2e6;
+    background: white;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.quantity-controls button:hover {
+    background: #f8f9fa;
+}
+
+.quantity-controls input {
+    width: 50px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    padding: 2px 5px;
+}
+
+.product-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.product-price {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.product-stock {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.btn-add-cart {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.pagination-btn {
+    margin: 0 2px;
+    padding: 5px 10px;
+    border: 1px solid #dee2e6;
+    background: white;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.pagination-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.pagination-btn:hover:not(.active) {
+    background: #f8f9fa;
+}
+
+#order-btn {
+    margin-top: auto;
+}
+
+.empty-cart {
+    text-align: center;
+    color: #6c757d;
+    padding: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .col-3, .col-9 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    #cart-section {
+        order: 2;
+        min-height: auto;
+    }
+
+    #products-section {
+        order: 1;
+    }
+}

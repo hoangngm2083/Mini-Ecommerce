@@ -30,8 +30,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PageResponse<ProductResponse> list(String keyword, Long categoryId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt")
-                .descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Product> products;
 
         if (keyword != null && !keyword.isBlank()) {
@@ -42,11 +41,22 @@ public class ProductServiceImpl implements ProductService {
             products = productRepository.findAll(pageable);
         }
 
-        List<ProductResponse> content = products.map(ProductFactory::toResponse)
-                .getContent();
+        List<ProductResponse> content = products.getContent().stream()
+                .map(product -> {
+                    return ProductFactory.toResponse(product);
+                })
+                .toList();
 
-        return new PageResponse<>(content, products.getNumber(), products.getSize(), products.getTotalElements(),
-                products.getTotalPages(), products.isFirst(), products.isLast(), products.isEmpty());
+        return new PageResponse<>(
+                content,
+                products.getNumber(),
+                products.getSize(),
+                products.getTotalElements(),
+                products.getTotalPages(),
+                products.isFirst(),
+                products.isLast(),
+                products.isEmpty()
+        );
     }
 
     @Override
@@ -98,5 +108,10 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sản phẩm"));
         productRepository.delete(product.getId());
+    }
+    
+    @Override
+    public void updateStockQuantity(Long productId, Integer newStockQuantity) {
+        productRepository.updateStockQuantity(productId, newStockQuantity);
     }
 }

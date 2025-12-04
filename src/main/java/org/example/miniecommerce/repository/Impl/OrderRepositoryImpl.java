@@ -117,17 +117,73 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public List<Order> findByUserId(Long userId) {
-        String sql = "SELECT * FROM orders WHERE user_id = ? AND deleted_at IS NULL";
-        List<Order> orders = jdbcTemplate.query(sql, orderRowMapper, userId);
+        String sql = """
+                SELECT o.id, o.user_id, o.total_amount, o.status, o.created_at, o.updated_at, o.deleted_at,
+                       oi.order_id as item_order_id, oi.product_id, oi.quantity, oi.unit_price as price,
+                       oi.created_at as item_created_at, oi.updated_at as item_updated_at, oi.deleted_at as item_deleted_at
+                FROM orders o
+                LEFT JOIN order_items oi ON o.id = oi.order_id AND oi.deleted_at IS NULL
+                WHERE o.user_id = ? AND o.deleted_at IS NULL
+                ORDER BY o.created_at DESC
+                """;
 
-        // Load items for each order
-        for (Order order : orders) {
-            String itemsSql = "SELECT * FROM order_items WHERE order_id = ? AND deleted_at IS NULL";
-            List<OrderItem> items = jdbcTemplate.query(itemsSql, orderItemRowMapper, order.getId());
-            order.setItems(items);
-        }
+        return jdbcTemplate.query(sql, new org.springframework.jdbc.core.ResultSetExtractor<List<Order>>() {
+            @Override
+            public List<Order> extractData(java.sql.ResultSet rs) throws SQLException {
+                java.util.Map<Long, Order> orderMap = new java.util.LinkedHashMap<>();
 
-        return orders;
+                while (rs.next()) {
+                    Long orderId = rs.getLong("id");
+
+                    Order order = orderMap.computeIfAbsent(orderId, id -> {
+                        try {
+                            Order o = new Order();
+                            o.setId(id);
+                            o.setUserId(rs.getLong("user_id"));
+                            o.setTotalAmount(rs.getBigDecimal("total_amount"));
+                            o.setStatus(OrderStatus.valueOf(rs.getString("status")));
+                            o.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                            o.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+
+                            java.sql.Timestamp deletedAtTimestamp = rs.getTimestamp("deleted_at");
+                            if (deletedAtTimestamp != null) {
+                                o.setDeletedAt(deletedAtTimestamp.toLocalDateTime());
+                            }
+
+                            o.setItems(new java.util.ArrayList<>());
+                            return o;
+                        } catch (SQLException e) {
+                            throw new RuntimeException("Error mapping order", e);
+                        }
+                    });
+
+                    // Add order item if exists
+                    Long itemOrderId = rs.getLong("item_order_id");
+                    if (itemOrderId != 0) { // Check if item exists (LEFT JOIN may return null)
+                        try {
+                            OrderItem item = new OrderItem();
+                            item.setOrderId(itemOrderId);
+                            item.setProductId(rs.getLong("product_id"));
+                            item.setQuantity(rs.getInt("quantity"));
+                            item.setPrice(rs.getBigDecimal("price"));
+                            item.setCreatedAt(rs.getTimestamp("item_created_at").toLocalDateTime());
+                            item.setUpdatedAt(rs.getTimestamp("item_updated_at").toLocalDateTime());
+
+                            java.sql.Timestamp itemDeletedAt = rs.getTimestamp("item_deleted_at");
+                            if (itemDeletedAt != null) {
+                                item.setDeletedAt(itemDeletedAt.toLocalDateTime());
+                            }
+
+                            order.getItems().add(item);
+                        } catch (SQLException e) {
+                            throw new RuntimeException("Error mapping order item", e);
+                        }
+                    }
+                }
+
+                return new java.util.ArrayList<>(orderMap.values());
+            }
+        }, userId);
     }
 
     @Override

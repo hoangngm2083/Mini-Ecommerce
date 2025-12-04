@@ -507,7 +507,6 @@ function displayOrders(orders) {
                     <div class="col-md-4 text-end">
                         <p class="mb-1"><strong>Tổng tiền:</strong></p>
                         <h5 class="text-primary">₫${parseFloat(order.totalAmount).toLocaleString('vi-VN')}</h5>
-                        <small class="text-muted">User ID: ${order.userId}</small>
                     </div>
                 </div>
             </div>

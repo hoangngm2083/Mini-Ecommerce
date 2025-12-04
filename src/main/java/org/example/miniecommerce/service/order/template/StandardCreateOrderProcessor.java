@@ -39,7 +39,7 @@ public class StandardCreateOrderProcessor extends CreateOrderProcessor {
 
         for (ProductResponse product : products) {
             if (product.stockQuantity() <= map.get(product.id())) {
-                throw new IllegalArgumentException("Product out of stock");
+                throw new IllegalArgumentException(product.name() + " đã hết hàng!");
             }
         }
 
@@ -54,5 +54,17 @@ public class StandardCreateOrderProcessor extends CreateOrderProcessor {
     protected void saveOrder(Order order) {
         orderRepository.save(order);
     }
-    
+
+    @Override
+    protected void deductInventory(Order order) {
+        // Trừ số lượng sản phẩm từ inventory sau khi đặt hàng thành công
+        order.getItems()
+                .forEach(item -> {
+                    Integer currentStock = productService.get(item.getProductId())
+                            .stockQuantity();
+                    Integer newStock = currentStock - item.getQuantity();
+                    productService.updateStockQuantity(item.getProductId(), newStock);
+                });
+    }
+
 }

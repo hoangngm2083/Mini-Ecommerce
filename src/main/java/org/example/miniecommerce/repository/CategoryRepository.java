@@ -113,22 +113,6 @@ public class CategoryRepository {
 
     public void delete(Long id) {
         LocalDateTime now = LocalDateTime.now();
-
-        // 1. Cascade soft-delete tất cả Product thuộc Category này trước
-        String sqlProduct = """
-                UPDATE products
-                SET deleted_at = :now
-                WHERE category_id = :categoryId
-                AND deleted_at IS NULL
-                """;
-
-        MapSqlParameterSource productParams = new MapSqlParameterSource()
-                .addValue("now", now)
-                .addValue("categoryId", id);
-
-        jdbc.update(sqlProduct, productParams);
-
-        // 2. Sau đó mới soft-delete Category
         String sqlCategory = """
                 UPDATE categories
                 SET deleted_at = :now
@@ -155,5 +139,39 @@ public class CategoryRepository {
     private long countActiveByKeyword(String keyword) {
         String sql = "SELECT COUNT(*) FROM categories WHERE LOWER(name) LIKE :keyword AND deleted_at IS NULL";
         return jdbc.queryForObject(sql, Map.of("keyword", keyword), Long.class);
+    }
+    // Kiểm tra tên trùng (ignore case + trim)
+    public boolean existsByNameIgnoreCaseTrim(String name) {
+        String sql = """
+        SELECT COUNT(*) FROM categories 
+        WHERE TRIM(LOWER(name)) = TRIM(LOWER(:name))
+          AND deleted_at IS NULL
+        """;
+        Integer count = jdbc.queryForObject(sql, Map.of("name", name), Integer.class);
+        return count != null && count > 0;
+    }
+
+    // Kiểm tra trùng tên nhưng bỏ qua chính nó (dùng khi update)
+    public boolean existsByNameIgnoreCaseTrimAndIdNot(String name, Long excludeId) {
+        String sql = """
+        SELECT COUNT(*) FROM categories 
+        WHERE TRIM(LOWER(name)) = TRIM(LOWER(:name))
+          AND id != :id 
+          AND deleted_at IS NULL
+        """;
+        Integer count = jdbc.queryForObject(sql,
+                Map.of("name", name, "id", excludeId), Integer.class);
+        return count != null && count > 0;
+    }
+
+    // Đếm số sản phẩm còn active thuộc danh mục
+    public long countActiveProductsByCategoryId(Long categoryId) {
+        String sql = """
+        SELECT COUNT(*) FROM products 
+        WHERE category_id = :categoryId 
+          AND deleted_at IS NULL
+        """;
+        Integer count = jdbc.queryForObject(sql, Map.of("categoryId", categoryId), Integer.class);
+        return count == null ? 0 : count;
     }
 }

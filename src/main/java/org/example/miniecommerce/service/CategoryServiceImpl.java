@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.miniecommerce.dto.category.CategoryResponse;
 import org.example.miniecommerce.dto.category.CreateCategoryRequest;
+import org.example.miniecommerce.dto.category.UpdateCategoryRequest;
 import org.example.miniecommerce.entity.Category;
 import org.example.miniecommerce.factory.CategoryFactory;
 import org.example.miniecommerce.repository.CategoryRepository;
@@ -37,32 +38,42 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryResponse create(CreateCategoryRequest req) {
         Category category = CategoryFactory.fromCreateRequest(req);
-        category = categoryRepository.insert(category);
+        String name = category.getName();
+        if (categoryRepository.existsByNameIgnoreCaseTrim(name)) {
+            throw new IllegalArgumentException("Danh mục '" + name + "' đã tồn tại!");
+        }
+        categoryRepository.insert(category);
         return CategoryFactory.toResponse(category);
     }
 
     @Override
     public CategoryResponse get(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Category not found with id: " + id));
-        return CategoryFactory.toResponse(category);
+        return categoryRepository.findById(id)
+                .map(CategoryFactory::toResponse)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục"));
     }
 
     @Override
-    public CategoryResponse update(Long id, CreateCategoryRequest req) {
+    public CategoryResponse update(Long id, UpdateCategoryRequest req) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Category not found with id: " + id));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục"));
         CategoryFactory.updateCategory(category, req);
-        category = categoryRepository.update(category);
-
+        String name = category.getName();
+        if (categoryRepository.existsByNameIgnoreCaseTrimAndIdNot(name,id)) {
+            throw new IllegalArgumentException("Danh mục '" + name + "' đã tồn tại!");
+        }
+        categoryRepository.update(category);
         return CategoryFactory.toResponse(category);
     }
 
     @Override
     public void delete(Long id) {
-        if (categoryRepository.findById(id).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + id);
+        categoryRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục"));
+
+        long productCount = categoryRepository.countActiveProductsByCategoryId(id);
+        if (productCount > 0) {
+            throw new IllegalStateException("Không thể xóa! Còn " + productCount + " sản phẩm thuộc danh mục này.");
         }
         categoryRepository.delete(id);
     }

@@ -2,6 +2,7 @@ package org.example.miniecommerce.controller;
 
 import org.example.miniecommerce.dto.category.CategoryResponse;
 import org.example.miniecommerce.dto.category.CreateCategoryRequest;
+import org.example.miniecommerce.dto.category.UpdateCategoryRequest;
 import org.example.miniecommerce.service.CategoryService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> update(@PathVariable Long id,
-            @Validated @RequestBody CreateCategoryRequest req) {
+               @Validated @RequestBody UpdateCategoryRequest req) {
         return ResponseEntity.ok(categoryService.update(id, req));
     }
 

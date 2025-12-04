@@ -2,6 +2,7 @@ package org.example.miniecommerce.service.order.template;
 
 import org.example.miniecommerce.dto.order.CreateOrderRequest;
 import org.example.miniecommerce.entity.Order;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Template Method Pattern: Abstract class định nghĩa workflow xử lý đơn hàng
@@ -11,6 +12,7 @@ public abstract class CreateOrderProcessor {
     /**
      * Template Method: Workflow chính để xử lý đơn hàng
      */
+    @Transactional
     public final Order processOrder(Long userId, CreateOrderRequest request) {
         // Step 1: Validate request
         validateRequest(request);
@@ -18,14 +20,19 @@ public abstract class CreateOrderProcessor {
         // Step 2: Check inventory
         checkInventory(request);
 
+
         // Step 3: Create order with userId
         Order originalOrder = createOrder(userId, request);
 
         // Step 4: Calculate total additional costs
         Order updatedOrder = calculateTotalAdditionalCosts(originalOrder);
 
+        // Step 6: Deduct inventory after successful order creation
+        deductInventory(updatedOrder);
+
         // Step 5: Save order to db
         saveOrder(updatedOrder);
+
 
         return updatedOrder;
     }
@@ -58,9 +65,11 @@ public abstract class CreateOrderProcessor {
     }
 
     // Hook methods - can be overridden by subclasses
-    protected  Order calculateTotalAdditionalCosts(Order order) {
+    protected Order calculateTotalAdditionalCosts(Order order) {
         return order;
     }
+
     protected abstract void saveOrder(Order order);
 
+    protected abstract void deductInventory(Order order);
 }

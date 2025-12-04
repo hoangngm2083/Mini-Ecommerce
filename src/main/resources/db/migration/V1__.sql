@@ -190,21 +190,75 @@ VALUES (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6),
       (3, 4), (3, 5), (3, 6);
 
 -- CATEGORIES
-INSERT INTO categories (name, description)
-VALUES ('Plants', 'Various kinds of plants'),
-       ('Fish', 'Aquarium fish'),
-       ('Accessories', 'Decorations and accessories');
+INSERT INTO categories (name, description) VALUES
+        ('Điện thoại & Phụ kiện',       'Smartphone, ốp lưng, sạc dự phòng'),
+        ('Laptop & Máy tính',           'Laptop gaming, văn phòng, linh kiện PC'),
+        ('Thời trang Nam',              'Áo thun, quần jeans, giày sneaker nam'),
+        ('Thời trang Nữ',               'Váy, áo kiểu, túi xách nữ'),
+        ('Mỹ phẩm & Chăm sóc da',       'Son, kem dưỡng, mặt nạ');
 
 -- PRODUCTS
-INSERT INTO products (name, description, price, stock_quantity, category_id)
-VALUES ('Aloe Vera', 'Fresh Aloe Vera plant', 100000, 50, 1),
-       ('Peace Lily', 'Indoor plant, air purifier', 150000, 30, 1),
-       ('Goldfish', 'Small freshwater fish', 50000, 100, 2),
-       ('Betta Fish', 'Colorful fighting fish', 80000, 40, 2),
-       ('Aquarium Rocks', 'Decorative stones for aquarium', 20000, 200, 3),
-       ('Spider Plant', 'Easy to grow plant', 75000, 60, 1),
-       ('Tetra Fish', 'Small colorful fish', 35000, 150, 2);
+INSERT INTO products (name, description, price, stock_quantity, category_id) VALUES
 
+-- 1. Điện thoại & Phụ kiện (10 sản phẩm)
+    ('iPhone 15 Pro Max 256GB', 'Chính hãng VN/A', 32990000, 8, 1),
+    ('Samsung Galaxy S24 Ultra', '12GB/256GB', 28990000, 12, 1),
+    ('Ốp lưng iPhone 15 MagSafe', 'Chống sốc cao cấp', 350000, 120, 1),
+    ('Sạc dự phòng 20000mAh PD 65W', 'Xiaomi chính hãng', 790000, 85, 1),
+    ('Cáp sạc Type-C to Lightning', 'Baseus 20W', 150000, 200, 1),
+    ('Kính cường lực iPhone 15 Pro', 'Full màn hình', 89000, 300, 1),
+    ('Tai nghe AirPods Pro 2', 'Chính hãng Apple', 5790000, 15, 1),
+    ('Xiaomi 14 12GB/512GB', 'New 2025', 18990000, 20, 1),
+    ('Ốp lưng trong suốt Samsung S24', 'Chính hãng', 220000, 150, 1),
+    ('Pin dự phòng Anker 10000mAh', 'Nhỏ gọn', 590000, 100, 1),
+
+-- 2. Laptop & Máy tính (10 sản phẩm)
+    ('MacBook Air M3 2025', '8GB/256GB', 26990000, 6, 2),
+    ('ASUS ROG Strix G16', 'i9-13980HX, RTX 4070', 48990000, 4, 2),
+    ('Dell XPS 14 2025', 'OLED 3.2K', 42990000, 5, 2),
+    ('Laptop Acer Nitro 5', 'i5-13420H, RTX 3050', 18990000, 15, 2),
+    ('Bàn phím cơ Keychron K8 Pro', 'Hotswap RGB', 2190000, 40, 2),
+    ('Chuột Logitech MX Master 3S', 'Không dây cao cấp', 2590000, 60, 2),
+    ('RAM DDR5 32GB 6000MHz', 'Corsair Vengeance', 3890000, 35, 2),
+    ('Ổ cứng SSD NVMe 2TB', 'Samsung 990 Pro', 4590000, 50, 2),
+    ('Màn hình 27" 4K Dell U2723QE', 'IPS Black', 10990000, 10, 2),
+    ('Laptop Lenovo ThinkPad X1 Carbon Gen 12', 'Doanh nhân', 38990000, 8, 2),
+
+-- 3. Thời trang Nam (10 sản phẩm)
+    ('Áo thun Unisex Oversize', 'Cotton 100%', 189000, 200, 3),
+    ('Quần jeans nam slimfit', 'Đen trơn', 450000, 120, 3),
+    ('Giày sneaker nam trắng', 'Da PU cao cấp', 690000, 80, 3),
+    ('Áo sơ mi nam dài tay', 'Oxford chống nhăn', 390000, 150, 3),
+    ('Dây nịt da bò thật', 'Khóa tự động', 350000, 100, 3),
+    ('Mũ lưỡi trai MLB NY', 'Chính hãng', 790000, 90, 3),
+    ('Áo khoác bomber nam', 'Chống nước nhẹ', 590000, 70, 3),
+    ('Quần short kaki nam', 'Nhiều màu', 280000, 180, 3),
+    ('Tất vớ nam cổ ngắn', 'Combo 5 đôi', 99000, 300, 3),
+    ('Áo polo nam cao cấp', 'Vải cá sấu', 320000, 140, 3),
+
+-- 4. Thời trang Nữ (10 sản phẩm)
+    ('Váy maxi hoa nhí', 'Dáng dài thanh lịch', 420000, 90, 4),
+    ('Áo croptop nữ', 'Ôm dáng sexy', 189000, 200, 4),
+    ('Túi xách nữ đeo chéo', 'Da PU cao cấp', 590000, 75, 4),
+    ('Giày cao gót 7cm', 'Mũi nhọn đen', 680000, 60, 4),
+    ('Khăn choàng cổ nữ', 'Lụa tơ tằm', 350000, 120, 4),
+    ('Set đồ bộ nữ mặc nhà', 'Thun cotton', 290000, 150, 4),
+    ('Áo len cổ lọ nữ', 'Dày dặn mùa đông', 390000, 100, 4),
+    ('Quần ống suông nữ', 'Cạp cao', 450000, 110, 4),
+    ('Bông tai bạc 925', 'Hình trái tim', 179000, 180, 4),
+    ('Váy công sở dáng A', 'Xanh pastel', 520000, 80, 4),
+
+-- 5. Mỹ phẩm & Chăm sóc da (10 sản phẩm)
+    ('Son 3CE Velvet Lip Tint', 'Màu đỏ gạch', 350000, 200, 5),
+    ('Kem chống nắng Skin1004', '50ml SPF50+', 289000, 180, 5),
+    ('Mặt nạ dưỡng da Mediheal', 'Combo 10 miếng', 250000, 150, 5),
+    ('Nước tẩy trang Bioderma 500ml', 'Hồng dành da nhạy cảm', 420000, 120, 5),
+    ('Serum Vitamin C Some By Mi', '20% Vitamin C', 389000, 100, 5),
+    ('Kem dưỡng ẩm Cetaphil 453g', 'Da khô', 450000, 90, 5),
+    ('Mascara Maybelline Sky High', 'Làm dài mi', 259000, 200, 5),
+    ('Phấn nước Cushion Laneige', 'Tone 21', 790000, 70, 5),
+    ('Xịt khoáng Evian 300ml', 'Nhập khẩu Pháp', 220000, 150, 5),
+    ('Toner Some By Mi AHA-BHA 150ml', 'Se khít lỗ chân lông', 320000, 130, 5);
 -- ORDERS (with dates across multiple months in 2024)
 INSERT INTO orders (user_id, total_amount, status, created_at)
 VALUES

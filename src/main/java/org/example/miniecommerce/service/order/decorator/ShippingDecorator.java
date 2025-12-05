@@ -22,7 +22,6 @@ public class ShippingDecorator extends OrderDecorator {
         BigDecimal newTotal = order.getTotalAmount()
                 .add(fee);
         order.setTotalAmount(newTotal);
-        System.out.println("Express shipping applied to order " + order.getId());
         return order;
     }
 

@@ -17,8 +17,8 @@ public abstract class CreateOrderProcessor {
         // Step 1: Validate request
         validateRequest(request);
 
-        // Step 2: Check inventory
-        checkInventory(request);
+        // Step 2: Check inventory and deduct immediately
+        deductInventory(request);
 
         // Step 3: Create order with userId
         Order originalOrder = createOrder(userId, request);
@@ -26,18 +26,13 @@ public abstract class CreateOrderProcessor {
         // Step 4: Calculate total additional costs
         Order updatedOrder = calculateTotalAdditionalCosts(originalOrder);
 
-        // Step 5: Deduct inventory after successful order creation
-        deductInventory(updatedOrder);
-
-        // Step 6: Save order to db
+        // Step 5: Save order to db
         saveOrder(updatedOrder);
 
         return updatedOrder;
     }
 
     // Abstract methods - must be implemented by subclasses
-    protected abstract void checkInventory(CreateOrderRequest request);
-
     protected abstract Order createOrder(Long userId, CreateOrderRequest request);
 
     protected void validateRequest(CreateOrderRequest request) {
@@ -69,5 +64,5 @@ public abstract class CreateOrderProcessor {
 
     protected abstract void saveOrder(Order order);
 
-    protected abstract void deductInventory(Order order);
+    protected abstract void deductInventory(CreateOrderRequest request);
 }

@@ -63,6 +63,18 @@ public class OrderServiceImpl implements OrderService {
 
         return mapToResponse(order);
     }
+    @Override
+    public void addFee(Long orderId, OrderDecoratorName name, BigDecimal fee) {
+
+        Optional<Order> orderOpt = orderRepository.findById(orderId);
+        if (orderOpt.isEmpty()) {
+            throw new IllegalArgumentException("Order not found");
+        }
+
+        Order order = decoratorManager.applyDecorator(orderOpt.get(), name, fee);
+
+        orderRepository.save(order);
+    }
 
     // GET /api/orders/me
     @Override
@@ -188,18 +200,6 @@ public class OrderServiceImpl implements OrderService {
         return new DeleteResponse("Order deleted");
     }
 
-    @Override
-    public void addFee(Long orderId, OrderDecoratorName name, BigDecimal fee) {
-
-        Optional<Order> orderOpt = orderRepository.findById(orderId);
-        if (orderOpt.isEmpty()) {
-            throw new IllegalArgumentException("Order not found");
-        }
-
-        Order order = decoratorManager.applyDecorator(orderOpt.get(), name, fee);
-
-        orderRepository.save(order);
-    }
 
 
     private OrderResponse mapToResponse(Order order) {

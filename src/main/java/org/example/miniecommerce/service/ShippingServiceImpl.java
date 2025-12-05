@@ -23,6 +23,7 @@ public class ShippingServiceImpl implements ShippingService {
     private final OrderProcessingMediator mediator;
     private final UserRepository userRepository;
     private final ShippingFactory shippingFactory;
+    private final org.example.miniecommerce.service.shipping.ShippingFeeCalculator feeCalculator;
 
 
     @Override
@@ -84,5 +85,10 @@ public class ShippingServiceImpl implements ShippingService {
         repo.update(s);
 
         return s;
+    }
+
+    @Override
+    public java.math.BigDecimal getFeeByMethod(String method) {
+        return feeCalculator.getFeeByMethod(method);
     }
 }

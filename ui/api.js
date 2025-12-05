@@ -100,6 +100,14 @@ class ApiService {
         });
     }
 
+    // Shipping APIs
+    static async getShippingFee(method) {
+        const params = new URLSearchParams({
+            method: method
+        });
+        return await this.makeRequest(`/api/shipments/fee?${params}`);
+    }
+
     // Authentication APIs (simulated)
     static async login(credentials) {
         // Simulated login - in real app, this would call actual API

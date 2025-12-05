@@ -29,4 +29,17 @@ public class ShippingFeeCalculator {
                 .map(strategy -> strategy.calculateFee(order))
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported shipping method: " + method));
     }
+
+    /**
+     * Lấy phí ship chỉ dựa trên method (không cần order)
+     * @param method Phương thức ship
+     * @return Phí ship
+     */
+    public BigDecimal getFeeByMethod(String method) {
+        return strategies.stream()
+                .filter(strategy -> strategy.supports(method))
+                .findFirst()
+                .map(strategy -> strategy.calculateFee(null))
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported shipping method: " + method));
+    }
 }

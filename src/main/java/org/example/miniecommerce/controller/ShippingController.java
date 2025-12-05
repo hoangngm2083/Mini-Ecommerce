@@ -36,4 +36,13 @@ public class ShippingController {
         Shipping s = svc.update(id, req, Long.parseLong(userId));
         return ResponseEntity.ok(ShippingMapper.toResponse(s));
     }
+
+    @GetMapping("/fee")
+    public ResponseEntity<?> getShippingFee(@RequestParam String method) {
+        java.math.BigDecimal fee = svc.getFeeByMethod(method);
+        return ResponseEntity.ok(java.util.Map.of(
+            "method", method,
+            "fee", fee
+        ));
+    }
 }

@@ -3,6 +3,8 @@ let currentPage = 0;
 let currentKeyword = '';
 let cart = [];
 let currentScreen = 'products';
+let currentShippingMethod = 'STANDARD'; // Track current shipping method
+let currentShippingFee = 0; // Track current shipping fee
 
 // DOM Elements - Main
 const loginScreen = document.getElementById('login-screen');
@@ -128,6 +130,12 @@ function setupEventListeners() {
     // Confirm order button
     if (confirmOrderBtn) {
         confirmOrderBtn.addEventListener('click', handleConfirmOrder);
+    }
+
+    // Shipment method change listener
+    const shipmentMethodSelect = document.getElementById('shipment-method');
+    if (shipmentMethodSelect) {
+        shipmentMethodSelect.addEventListener('change', handleShipmentMethodChange);
     }
 }
 
@@ -345,6 +353,13 @@ async function handleOrder() {
 
     // Populate order summary and show modal
     populateOrderSummary();
+    
+    // Reset to default shipping method
+    currentShippingMethod = 'STANDARD';
+    
+    // Load initial shipping fee for STANDARD method
+    await loadShippingFee('STANDARD');
+    
     orderModal.show();
 }
 
@@ -398,12 +413,41 @@ async function handleConfirmOrder() {
     }
 }
 
+// Shipping Fee Management
+async function loadShippingFee(method) {
+    try {
+        const response = await ApiService.getShippingFee(method);
+        
+        // Save current shipping fee
+        currentShippingFee = parseFloat(response.fee);
+        
+        // Update order summary with new shipping fee
+        populateOrderSummary();
+        
+    } catch (error) {
+        console.error('Error loading shipping fee:', error);
+        currentShippingFee = 0;
+        populateOrderSummary();
+        showError('Không thể tải phí vận chuyển');
+    }
+}
+
+async function handleShipmentMethodChange(e) {
+    const newMethod = e.target.value;
+    
+    // Only load if method actually changed
+    if (newMethod !== currentShippingMethod) {
+        currentShippingMethod = newMethod;
+        await loadShippingFee(newMethod);
+    }
+}
+
 function populateOrderSummary() {
-    let totalAmount = 0;
+    let subtotal = 0;
 
     const itemsHtml = cart.map(item => {
         const itemTotal = item.price * item.quantity;
-        totalAmount += itemTotal;
+        subtotal += itemTotal;
 
         return `
             <div class="order-item-summary">
@@ -416,10 +460,28 @@ function populateOrderSummary() {
         `;
     }).join('');
 
+    // Calculate final total
+    const finalTotal = subtotal + currentShippingFee;
+
     orderItemsSummary.innerHTML = `
         ${itemsHtml}
+        <hr class="my-3">
+        <div class="d-flex justify-content-between mb-2">
+            <span>Tạm tính:</span>
+            <span>₫${subtotal.toLocaleString('vi-VN')}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+            <span>Phí vận chuyển:</span>
+            <span class="text-primary" id="shipping-fee-in-summary">
+                ${currentShippingFee > 0 
+                    ? '₫' + currentShippingFee.toLocaleString('vi-VN')
+                    : '<small class="text-muted">Đang tải...</small>'
+                }
+            </span>
+        </div>
+        <hr class="my-2">
         <div class="order-total">
-            <strong>Tổng cộng: ₫${totalAmount.toLocaleString('vi-VN')}</strong>
+            <strong>Tổng cộng: ₫${finalTotal.toLocaleString('vi-VN')}</strong>
         </div>
     `;
 }

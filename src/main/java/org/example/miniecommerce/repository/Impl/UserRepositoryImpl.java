@@ -1,6 +1,8 @@
 package org.example.miniecommerce.repository.Impl;
 
 import lombok.RequiredArgsConstructor;
+
+import org.example.miniecommerce.entity.Role;
 import org.example.miniecommerce.entity.User;
 import org.example.miniecommerce.repository.UserRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -30,6 +32,7 @@ public class UserRepositoryImpl implements UserRepository {
             user.setEmail(rs.getString("email"));
             user.setPassword(rs.getString("password"));
             user.setName(rs.getString("name"));
+            user.setRole(Role.valueOf(rs.getString("role")));
             user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
             user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
             return user;
@@ -68,14 +71,15 @@ public class UserRepositoryImpl implements UserRepository {
         LocalDateTime now = LocalDateTime.now();
         if (user.getId() == null) {
             // Insert mới
-            String sql = "INSERT INTO users (email, password, name, created_at) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO users (email, password, name, role,created_at) VALUES (?, ?, ?, ?, ?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps = connection.prepareStatement(sql, new String[] { "id" });
                 ps.setString(1, user.getEmail());
                 ps.setString(2, user.getPassword());
                 ps.setString(3, user.getName());
-                ps.setObject(4, now);
+                ps.setString(4, user.getRole().toString());
+                ps.setObject(5, now);
                 return ps;
             }, keyHolder);
             // Lấy id tự động tạo 
@@ -93,9 +97,9 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void deleteById(Long id) {
-        LocalDateTime now = LocalDateTime.now();
-        String sql = "DELETE FROM users where id = ?";
-        jdbcTemplate.update(sql, now, id);
+        // 2. Cập nhật deleted_at (xoá mềm)
+        String softDeleteSql = "UPDATE users SET deleted_at = ? WHERE id = ?";
+        jdbcTemplate.update(softDeleteSql, LocalDateTime.now(), id);
     }
 
 }

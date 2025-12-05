@@ -8,7 +8,7 @@ import org.example.miniecommerce.dto.user.UserResponse;
 import org.example.miniecommerce.entity.User;
 import org.example.miniecommerce.factory.UserFactory;
 import org.example.miniecommerce.repository.UserRepository;
-import org.example.miniecommerce.repository.UserRoleRepository;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserFactory userFactory;
-    private final UserRoleRepository userRoleRepository;
+
 
     //register
     @Override
@@ -30,8 +30,6 @@ public class AuthServiceImpl implements AuthService {
         User user = userFactory.toUser(request);
         userRepository.save(user);
 
-        //  gán role cho user
-        userRoleRepository.assignRoleToUser(request.getEmail(), "CUSTOMER");
 
         UserResponse userResponse = userFactory.toUserResponse(user);
 

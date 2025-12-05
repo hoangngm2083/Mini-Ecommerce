@@ -8,6 +8,7 @@ CREATE TABLE users
 (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     name       VARCHAR(255)              NOT NULL,
+    role       VARCHAR(20)               NOT NULL,
     email      VARCHAR(255)              NOT NULL UNIQUE,
     password   VARCHAR(255)              NOT NULL,
     created_at DATETIME                           DEFAULT CURRENT_TIMESTAMP,
@@ -15,39 +16,6 @@ CREATE TABLE users
     deleted_at DATETIME                           DEFAULT NULL
 );
 
--- ROLES
-CREATE TABLE roles (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description VARCHAR(255),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- PERMISSION
-CREATE TABLE permissions (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description VARCHAR(255),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- USER ROLES
-CREATE TABLE user_roles (
-    user_id BIGINT NOT NULL,
-    role_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, role_id),
-    CONSTRAINT fk_ur_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_ur_role FOREIGN KEY (role_id) REFERENCES roles(id)
-);
-
--- ROLE PERMISSION
-CREATE TABLE role_permissions (
-    role_id BIGINT NOT NULL,
-    permission_id BIGINT NOT NULL,
-    PRIMARY KEY (role_id, permission_id),
-    CONSTRAINT fk_rp_role FOREIGN KEY (role_id) REFERENCES roles(id),
-    CONSTRAINT fk_rp_permission FOREIGN KEY (permission_id) REFERENCES permissions(id)
-);
 
 -- CATEGORIES
 CREATE TABLE categories
@@ -156,38 +124,12 @@ CREATE TABLE shipments
 -- ============================
 
 -- USERS
-INSERT INTO users (name, email, password)
-VALUES ('Admin User', 'admin@example.com', 'admin123'),
-       ('John Doe', 'john@example.com', 'password123'),
-       ('Jane Smith', 'jane@example.com', 'password456'),
-       ('Bob Johnson', 'bob@example.com', 'password789'),
-       ('Alice Brown', 'alice@example.com', 'password999');
-
--- ROLES
-INSERT INTO roles (name, description)
-VALUES ('ADMIN', 'Full admin access'),
-       ('CUSTOMER', 'Customer with limited access'),
-       ('STAFF', 'Employee who manages orders');
-
--- PERMISSION
-INSERT INTO permissions (name, description)
-VALUES
-    ('USER_VIEW', 'View users'),
-    ('USER_CREATE', 'Create users'),
-    ('USER_DELETE', 'Delete users'),
-    ('PRODUCT_VIEW', 'View product list'),
-    ('PRODUCT_CREATE', 'Create product'),
-    ('ORDER_MANAGE', 'Manage customer orders');
-
--- USER ROLES
-INSERT INTO user_roles (user_id, role_id)
-VALUES (1, 1), (2, 2), (3, 2), (4, 2), (5, 2);
-
--- ROLE PERMISSIONS
-INSERT INTO role_permissions (role_id, permission_id)
-VALUES (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6),
-      (2, 4),
-      (3, 4), (3, 5), (3, 6);
+INSERT INTO users (name, role , email, password)
+VALUES ('Admin User', 'ADMIN','admin@example.com','admin123'),
+       ('John Doe', 'CUSTOMER' ,'john@example.com', 'password123'),
+       ('Jane Smith', 'STAFF','jane@example.com', 'password456'),
+       ('Bob Johnson', 'STAFF','bob@example.com', 'password789'),
+       ('Alice Brown', 'CUSTOMER','alice@example.com', 'password999');
 
 -- CATEGORIES
 INSERT INTO categories (name, description) VALUES

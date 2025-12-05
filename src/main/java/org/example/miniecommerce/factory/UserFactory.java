@@ -3,8 +3,8 @@ package org.example.miniecommerce.factory;
 import org.example.miniecommerce.dto.user.CreateUserRequest;
 import org.example.miniecommerce.dto.user.UpdateUserRequest;
 import org.example.miniecommerce.dto.user.UserResponse;
+import org.example.miniecommerce.entity.Role;
 import org.example.miniecommerce.entity.User;
-import org.example.miniecommerce.repository.UserRoleRepository;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -18,11 +18,10 @@ import lombok.Data;
 @Component
 public class UserFactory {
 
-  private final UserRoleRepository userRoleRepository;
-
   public User toUser(CreateUserRequest req) {
     User user = new User();
     user.setName(req.getName());
+    user.setRole(req.getRole());
     user.setEmail(req.getEmail());
     user.setPassword(req.getPassword());
     return user;
@@ -46,20 +45,13 @@ public class UserFactory {
   
 
   public UserResponse toUserResponse(User user) {
-    String roleName = null;
-    try {
-      roleName = userRoleRepository.getRoleNameByUserEmail(user.getEmail());
-  } catch (Exception e) {
-      // Handle case where user has no role assigned yet
-      roleName = "USER"; // or null, depending on your business logic
-  }
     return UserResponse.builder()
         .id(user.getId())
         .name(user.getName())
         .email(user.getEmail())
-        .roleName(roleName)
+        .role(user.getRole())
         .createdAt(user.getCreatedAt())
-        .updateAt(user.getUpdatedAt())
+        .updatedAt(user.getUpdatedAt())
         .build();
   }
 }

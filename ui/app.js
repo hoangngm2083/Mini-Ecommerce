@@ -72,7 +72,7 @@ function showMainScreen() {
     // Update user name in navbar
     const user = ApiService.getCurrentUser();
     if (user && userName) {
-        userName.textContent = user.username || 'User';
+        userName.textContent = user.name || user.email || 'User';
     }
 }
 
@@ -108,6 +108,12 @@ function setupEventListeners() {
     // Login form
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+    }
+
+    // Register form
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
     }
 
     // Search functionality
@@ -501,28 +507,36 @@ function showSuccess(message) {
     alert('Thành công: ' + message);
 }
 
+function isValidEmail(email) {
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
 // Login/Logout Functions
 async function handleLogin(e) {
     e.preventDefault();
 
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
 
-    if (!username || !password) {
+    if (!email || !password) {
         showError('Vui lòng nhập đầy đủ thông tin đăng nhập');
         return;
     }
 
-    try {
-        // For demo purposes, simulate login
-        // In real app, this would call ApiService.login()
-        const demoUser = {
-            id: 1,
-            username: username,
-            email: username + '@example.com'
-        };
+    // Validate email format
+    if (!isValidEmail(email)) {
+        showError('Email không hợp lệ. Vui lòng nhập đúng định dạng email');
+        return;
+    }
 
-        ApiService.setCurrentUser(demoUser);
+    try {
+        // Call actual login API (backend expects email, not username)
+        const response = await ApiService.login({
+            email: email,
+            password: password
+        });
 
         showSuccess('Đăng nhập thành công!');
         showMainScreen();
@@ -531,6 +545,96 @@ async function handleLogin(e) {
     } catch (error) {
         console.error('Login error:', error);
         showError('Đăng nhập thất bại: ' + error.message);
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('register-name').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
+
+    // Validation
+    if (!name || !email || !password || !confirmPassword) {
+        showError('Vui lòng nhập đầy đủ thông tin');
+        return;
+    }
+
+    // Validate email format
+    if (!isValidEmail(email)) {
+        showError('Email không hợp lệ. Vui lòng nhập đúng định dạng email');
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showError('Mật khẩu xác nhận không khớp');
+        return;
+    }
+
+    if (password.length < 6) {
+        showError('Mật khẩu phải có ít nhất 6 ký tự');
+        return;
+    }
+
+    try {
+        // Call register API with CUSTOMER role hardcoded
+        const response = await ApiService.register({
+            name: name,
+            email: email,
+            password: password,
+            role: 'CUSTOMER'  // Hardcoded as CUSTOMER
+        });
+
+        showSuccess('Đăng ký thành công! Đang đăng nhập...');
+        
+        // Auto login after successful registration
+        showMainScreen();
+        loadInitialData();
+
+    } catch (error) {
+        console.error('Register error:', error);
+        showError('Đăng ký thất bại: ' + error.message);
+    }
+}
+
+function toggleAuthForm() {
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const authTitle = document.getElementById('auth-title');
+    const toggleText = document.getElementById('toggle-auth-text');
+    const loginDemo = document.getElementById('login-demo');
+
+    if (loginForm.classList.contains('d-none')) {
+        // Show login form
+        loginForm.classList.remove('d-none');
+        registerForm.classList.add('d-none');
+        authTitle.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
+        toggleText.textContent = 'Chưa có tài khoản? Đăng ký ngay';
+        loginDemo.classList.remove('d-none');
+    } else {
+        // Show register form
+        loginForm.classList.add('d-none');
+        registerForm.classList.remove('d-none');
+        authTitle.innerHTML = '<i class="fas fa-user-plus"></i> Đăng ký';
+        toggleText.textContent = 'Đã có tài khoản? Đăng nhập';
+        loginDemo.classList.add('d-none');
+    }
+}
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(inputId + '-icon');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
     }
 }
 
@@ -887,3 +991,5 @@ function getShipmentStatusText(status) {
 window.showScreen = showScreen;
 window.logout = logout;
 window.showOrderDetail = showOrderDetail;
+window.toggleAuthForm = toggleAuthForm;
+window.togglePassword = togglePassword;

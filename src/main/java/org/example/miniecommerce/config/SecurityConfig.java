@@ -28,16 +28,29 @@ public class SecurityConfig {
         }));
 
         http.authorizeHttpRequests(request -> request
+                // Public authentication endpoints
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/shipments/fee").permitAll()
 
+                // Public read access to products and categories (for all users including anonymous)
+                // GET /api/products - List all products
+                // GET /api/products/{id} - Get product detail
                 .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
+                
+                // GET /api/categories - List all categories
+                // GET /api/categories/{id} - Get category detail
                 .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()
 
+                // User endpoints - specific rules MUST come before general rules
                 .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
-                .requestMatchers("/api/orders", "/api/orders/me", "/api/orders/me/**").hasRole("CUSTOMER")
+                .requestMatchers("/api/users", "/api/users/**").hasRole("ADMIN")
+
+                // Order endpoints for CUSTOMER
+                .requestMatchers("/api/orders/me", "/api/orders/me/**").hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
+                .requestMatchers("/api/orders/**").hasRole("ADMIN")
+                
                 .requestMatchers("/api/payments", "/api/payments/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/shippings", "/api/shippings/**").hasRole("CUSTOMER")
 
@@ -49,10 +62,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("STAFF")
                 .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("STAFF")
 
-                .requestMatchers("/api/users", "/api/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/orders/**/status").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated()

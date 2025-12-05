@@ -17,26 +17,72 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white text-center">
-                        <h4><i class="fas fa-sign-in-alt"></i> Đăng nhập</h4>
+                        <h4 id="auth-title"><i class="fas fa-sign-in-alt"></i> Đăng nhập</h4>
                     </div>
                     <div class="card-body">
+                        <!-- Login Form -->
                         <form id="login-form">
                             <div class="mb-3">
-                                <label for="username" class="form-label">Tên đăng nhập</label>
-                                <input type="text" class="form-control" id="username" required>
+                                <label for="login-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="login-email" placeholder="Nhập email của bạn" required>
                             </div>
                             <div class="mb-3">
-                                <label for="password" class="form-label">Mật khẩu</label>
-                                <input type="password" class="form-control" id="password" required>
+                                <label for="login-password" class="form-label">Mật khẩu</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="login-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('login-password')">
+                                        <i class="fas fa-eye" id="login-password-icon"></i>
+                                    </button>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary w-100" id="login-btn">
                                 <i class="fas fa-sign-in-alt"></i> Đăng nhập
                             </button>
                         </form>
 
+                        <!-- Register Form -->
+                        <form id="register-form" class="d-none">
+                            <div class="mb-3">
+                                <label for="register-name" class="form-label">Họ và tên</label>
+                                <input type="text" class="form-control" id="register-name" placeholder="Nhập họ và tên" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="register-email" placeholder="Nhập email của bạn" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-password" class="form-label">Mật khẩu</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="register-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('register-password')">
+                                        <i class="fas fa-eye" id="register-password-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-confirm-password" class="form-label">Xác nhận mật khẩu</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="register-confirm-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('register-confirm-password')">
+                                        <i class="fas fa-eye" id="register-confirm-password-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100" id="register-btn">
+                                <i class="fas fa-user-plus"></i> Đăng ký
+                            </button>
+                        </form>
+
                         <hr class="my-3">
+                        
+                        <!-- Toggle between Login/Register -->
                         <div class="text-center">
-                            <small class="text-muted">Demo: admin / admin123</small>
+                            <small class="text-muted" id="login-demo">Demo: admin@example.com / admin123</small>
+                            <div class="mt-2">
+                                <button class="btn btn-link btn-sm" id="toggle-auth-btn" onclick="toggleAuthForm()">
+                                    <span id="toggle-auth-text">Chưa có tài khoản? Đăng ký ngay</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

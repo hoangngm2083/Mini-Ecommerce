@@ -17,15 +17,16 @@ public class ShippingRepository {
     }
 
     public void save(Shipping shipping) {
-        String sql = "INSERT INTO shipments (order_id, shipped_by, address, method, fee, status, created_at, updated_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO shipments (order_id, shipped_by, address, method, fee, status, notes, created_at, updated_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         jdbcTemplate.update(sql,
             shipping.getOrderId(),
             shipping.getShippedById(),
             shipping.getAddress(),
             shipping.getMethod().name(),
             shipping.getFee(),
-            shipping.getStatus().name()
+            shipping.getStatus().name(),
+            shipping.getNotes()
         );
     }
 

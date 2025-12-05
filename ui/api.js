@@ -62,22 +62,17 @@ class ApiService {
     }
 
     // Order APIs
-    static async createOrder(orderItems) {
+    static async createOrder(orderPayload) {
         if (!currentUser || !currentUser.id) {
             throw new Error('User not authenticated');
         }
-        
-
-        const requestBody = {
-            items: orderItems
-        };
 
         return await this.makeRequest(API_CONFIG.ENDPOINTS.ORDERS, {
             method: 'POST',
             headers: {
                 'userId': currentUser.id.toString()
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(orderPayload)
         });
     }
 
@@ -87,6 +82,18 @@ class ApiService {
         }
 
         return await this.makeRequest(`${API_CONFIG.ENDPOINTS.ORDERS}/me`, {
+            headers: {
+                'userId': currentUser.id.toString()
+            }
+        });
+    }
+
+    static async getOrderDetail(orderId) {
+        if (!currentUser || !currentUser.id) {
+            throw new Error('User not authenticated');
+        }
+
+        return await this.makeRequest(`${API_CONFIG.ENDPOINTS.ORDERS}/${orderId}`, {
             headers: {
                 'userId': currentUser.id.toString()
             }

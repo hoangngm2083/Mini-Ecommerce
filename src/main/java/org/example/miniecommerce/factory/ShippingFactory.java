@@ -1,17 +1,24 @@
 package org.example.miniecommerce.factory;
 
+import lombok.RequiredArgsConstructor;
 import org.example.miniecommerce.dto.shipping.CreateShipmentRequest;
 import org.example.miniecommerce.dto.shipping.UpdateShipmentRequest;
 import org.example.miniecommerce.dto.shipping.UpdateShipmentType;
 import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.Shipping;
 import org.example.miniecommerce.entity.User;
+import org.example.miniecommerce.service.shipping.ShippingFeeCalculator;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+@Component
+@RequiredArgsConstructor
 public class ShippingFactory {
 
-    public static Shipping fromCreateRequest(CreateShipmentRequest req, Order order, User shippedBy) {
+    private final ShippingFeeCalculator shippingFeeCalculator;
+
+    public Shipping fromCreateRequest(CreateShipmentRequest req, Order order, User shippedBy) {
         Shipping s = new Shipping();
         s.setOrder(order);
         s.setOrderId(order.getId());
@@ -22,7 +29,10 @@ public class ShippingFactory {
         s.setAddress(req.address());
         s.setMethod(Shipping.Method.valueOf(req.method()
                 .toUpperCase()));
-        s.setFee(req.fee());
+
+        // Tự động tính phí ship dựa trên method và order
+        s.setFee(shippingFeeCalculator.calculateFee(req.method(), order));
+
         s.setNotes(req.notes());
         s.setStatus(Shipping.Status.CREATED);
         return s;

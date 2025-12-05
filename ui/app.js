@@ -22,6 +22,12 @@ const loadingSpinner = document.getElementById('loading-spinner');
 const cartItems = document.getElementById('cart-items');
 const orderBtn = document.getElementById('order-btn');
 
+// DOM Elements - Order Modal
+const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+const orderForm = document.getElementById('order-form');
+const orderItemsSummary = document.getElementById('order-items-summary');
+const confirmOrderBtn = document.getElementById('confirm-order-btn');
+
 // DOM Elements - Orders
 const ordersContainer = document.getElementById('orders-container');
 
@@ -117,6 +123,11 @@ function setupEventListeners() {
     // Order button
     if (orderBtn) {
         orderBtn.addEventListener('click', handleOrder);
+    }
+
+    // Confirm order button
+    if (confirmOrderBtn) {
+        confirmOrderBtn.addEventListener('click', handleConfirmOrder);
     }
 }
 
@@ -332,15 +343,48 @@ async function handleOrder() {
         return;
     }
 
+    // Populate order summary and show modal
+    populateOrderSummary();
+    orderModal.show();
+}
+
+async function handleConfirmOrder() {
+    // Validate form
+    const paymentMethod = document.getElementById('payment-method').value;
+    const shipmentMethod = document.getElementById('shipment-method').value;
+    const shippingAddress = document.getElementById('shipping-address').value.trim();
+    const orderNotes = document.getElementById('order-notes').value;
+
+    // Check required fields
+    if (!shippingAddress) {
+        showError('Vui lòng nhập địa chỉ giao hàng!');
+        document.getElementById('shipping-address').focus();
+        return;
+    }
+
     try {
-        // Prepare order items
-        const orderItems = cart.map(item => ({
-            productId: item.productId,
-            quantity: item.quantity
-        }));
+        // Prepare order payload
+        const orderPayload = {
+            items: cart.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity
+            })),
+            payment: {
+                method: paymentMethod
+            },
+            shipment: {
+                address: shippingAddress,
+                method: shipmentMethod,
+                notes: orderNotes
+            }
+        };
 
         // Create order
-        const orderResponse = await ApiService.createOrder(orderItems);
+        const orderResponse = await ApiService.createOrder(orderPayload);
+
+        // Hide modal and reset form
+        orderModal.hide();
+        orderForm.reset();
 
         showSuccess('Đặt hàng thành công!');
         cart = [];
@@ -352,6 +396,32 @@ async function handleOrder() {
         console.error('Order error:', error);
         showError('Không thể đặt hàng: ' + error.message);
     }
+}
+
+function populateOrderSummary() {
+    let totalAmount = 0;
+
+    const itemsHtml = cart.map(item => {
+        const itemTotal = item.price * item.quantity;
+        totalAmount += itemTotal;
+
+        return `
+            <div class="order-item-summary">
+                <div class="order-item-info">
+                    <div class="fw-bold">${item.name}</div>
+                    <div class="text-muted">Số lượng: ${item.quantity}</div>
+                </div>
+                <div class="order-item-price">₫${itemTotal.toLocaleString('vi-VN')}</div>
+            </div>
+        `;
+    }).join('');
+
+    orderItemsSummary.innerHTML = `
+        ${itemsHtml}
+        <div class="order-total">
+            <strong>Tổng cộng: ₫${totalAmount.toLocaleString('vi-VN')}</strong>
+        </div>
+    `;
 }
 
 // Utility Functions
@@ -492,7 +562,12 @@ function displayOrders(orders) {
                 <h6 class="mb-0">
                     <i class="fas fa-receipt"></i> Đơn hàng #${order.id}
                 </h6>
-                <span class="badge bg-${getStatusColor(order.status)}">${getStatusText(order.status)}</span>
+                <div>
+                    <span class="badge bg-${getStatusColor(order.status)}">${getStatusText(order.status)}</span>
+                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="showOrderDetail(${order.id})">
+                        <i class="fas fa-eye"></i> Xem chi tiết
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -538,6 +613,215 @@ function getStatusText(status) {
 
 // Removed formatDate function as API doesn't return created date
 
+// Show order detail modal
+async function showOrderDetail(orderId) {
+    try {
+        const orderDetail = await ApiService.getOrderDetail(orderId);
+        displayOrderDetailModal(orderDetail);
+    } catch (error) {
+        console.error('Error loading order detail:', error);
+        showError('Không thể tải chi tiết đơn hàng: ' + error.message);
+    }
+}
+
+function displayOrderDetailModal(orderDetail) {
+    // Get or create the modal
+    let modalElement = document.getElementById('orderDetailModal');
+    if (!modalElement) {
+        // Create modal if it doesn't exist
+        createOrderDetailModal();
+        modalElement = document.getElementById('orderDetailModal');
+    }
+
+    // Populate modal content
+    const modalBody = modalElement.querySelector('.modal-body');
+    
+    // Payment section
+    let paymentHtml = '<p class="text-muted">Không có thông tin thanh toán</p>';
+    if (orderDetail.payment) {
+        const payment = orderDetail.payment;
+        paymentHtml = `
+            <table class="table table-sm">
+                <tbody>
+                    <tr>
+                        <th width="40%">Phương thức:</th>
+                        <td>${payment.paymentMethod}</td>
+                    </tr>
+                    <tr>
+                        <th>Số tiền:</th>
+                        <td class="text-primary fw-bold">₫${parseFloat(payment.amount).toLocaleString('vi-VN')}</td>
+                    </tr>
+                    <tr>
+                        <th>Trạng thái:</th>
+                        <td><span class="badge bg-${getPaymentStatusColor(payment.status)}">${getPaymentStatusText(payment.status)}</span></td>
+                    </tr>
+                    ${payment.transactionId ? `
+                    <tr>
+                        <th>Mã giao dịch:</th>
+                        <td>${payment.transactionId}</td>
+                    </tr>` : ''}
+                    ${payment.paidAt ? `
+                    <tr>
+                        <th>Đã thanh toán lúc:</th>
+                        <td>${new Date(payment.paidAt).toLocaleString('vi-VN')}</td>
+                    </tr>` : ''}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // Shipment section
+    let shipmentHtml = '<p class="text-muted">Không có thông tin vận chuyển</p>';
+    if (orderDetail.shipment) {
+        const shipment = orderDetail.shipment;
+        shipmentHtml = `
+            <table class="table table-sm">
+                <tbody>
+                    <tr>
+                        <th width="40%">Địa chỉ:</th>
+                        <td>${shipment.address || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Phương thức:</th>
+                        <td>${shipment.method}</td>
+                    </tr>
+                    <tr>
+                        <th>Phí vận chuyển:</th>
+                        <td class="text-primary fw-bold">₫${parseFloat(shipment.fee).toLocaleString('vi-VN')}</td>
+                    </tr>
+                    <tr>
+                        <th>Trạng thái:</th>
+                        <td><span class="badge bg-${getShipmentStatusColor(shipment.status)}">${getShipmentStatusText(shipment.status)}</span></td>
+                    </tr>
+                    ${shipment.notes ? `
+                    <tr>
+                        <th>Ghi chú:</th>
+                        <td>${shipment.notes}</td>
+                    </tr>` : ''}
+                    ${shipment.shippedAt ? `
+                    <tr>
+                        <th>Bắt đầu giao:</th>
+                        <td>${new Date(shipment.shippedAt).toLocaleString('vi-VN')}</td>
+                    </tr>` : ''}
+                    ${shipment.deliveredAt ? `
+                    <tr>
+                        <th>Đã giao:</th>
+                        <td>${new Date(shipment.deliveredAt).toLocaleString('vi-VN')}</td>
+                    </tr>` : ''}
+                </tbody>
+            </table>
+        `;
+    }
+
+    modalBody.innerHTML = `
+        <div class="mb-4">
+            <h6 class="border-bottom pb-2">
+                <i class="fas fa-receipt"></i> Thông tin đơn hàng #${orderDetail.id}
+            </h6>
+            <p class="mb-1"><strong>Trạng thái:</strong> <span class="badge bg-${getStatusColor(orderDetail.status)}">${getStatusText(orderDetail.status)}</span></p>
+            <p class="mb-1"><strong>Tổng tiền:</strong> <span class="text-primary fw-bold">₫${parseFloat(orderDetail.totalAmount).toLocaleString('vi-VN')}</span></p>
+        </div>
+
+        <div class="mb-4">
+            <h6 class="border-bottom pb-2">
+                <i class="fas fa-box"></i> Sản phẩm
+            </h6>
+            <ul class="list-unstyled">
+                ${orderDetail.items.map(item => `
+                    <li class="mb-2">
+                        <strong>Product ${item.productId}</strong> 
+                        <span class="text-muted">x${item.quantity}</span>
+                        <span class="float-end">₫${parseFloat(item.price).toLocaleString('vi-VN')}</span>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+
+        <div class="mb-4">
+            <h6 class="border-bottom pb-2">
+                <i class="fas fa-credit-card"></i> Thông tin thanh toán
+            </h6>
+            ${paymentHtml}
+        </div>
+
+        <div class="mb-4">
+            <h6 class="border-bottom pb-2">
+                <i class="fas fa-truck"></i> Thông tin vận chuyển
+            </h6>
+            ${shipmentHtml}
+        </div>
+    `;
+
+    // Show the modal
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+}
+
+function createOrderDetailModal() {
+    const modalHtml = `
+        <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="orderDetailModalLabel">
+                            <i class="fas fa-info-circle"></i> Chi tiết đơn hàng
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Content will be populated dynamically -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Đóng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function getPaymentStatusColor(status) {
+    switch (status) {
+        case 'PENDING': return 'warning';
+        case 'SUCCESS': return 'success';
+        case 'FAILED': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+function getPaymentStatusText(status) {
+    switch (status) {
+        case 'PENDING': return 'Đang chờ';
+        case 'SUCCESS': return 'Thành công';
+        case 'FAILED': return 'Thất bại';
+        default: return status;
+    }
+}
+
+function getShipmentStatusColor(status) {
+    switch (status) {
+        case 'CREATED': return 'secondary';
+        case 'SHIPPING': return 'info';
+        case 'COMPLETED': return 'success';
+        case 'REJECTED': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+function getShipmentStatusText(status) {
+    switch (status) {
+        case 'CREATED': return 'Đã tạo';
+        case 'SHIPPING': return 'Đang giao';
+        case 'COMPLETED': return 'Hoàn thành';
+        case 'REJECTED': return 'Bị từ chối';
+        default: return status;
+    }
+}
+
 // Global functions for onclick handlers
 window.showScreen = showScreen;
 window.logout = logout;
+window.showOrderDetail = showOrderDetail;

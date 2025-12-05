@@ -169,6 +169,82 @@
         </div>
     </div>
 
+    <!-- Order Form Modal -->
+    <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderModalLabel">
+                        <i class="fas fa-shopping-cart"></i> Xác nhận đặt hàng
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="order-form">
+                        <!-- Order Items Summary -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Sản phẩm đã chọn:</h6>
+                            <div id="order-items-summary" class="border rounded p-3 bg-light">
+                                <!-- Order items will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="mb-3">
+                            <label for="payment-method" class="form-label fw-bold">
+                                <i class="fas fa-credit-card"></i> Phương thức thanh toán
+                            </label>
+                            <select class="form-select" id="payment-method" required>
+                                <option value="CASH" selected>Tiền mặt (CASH)</option>
+                                <option value="CREDIT_CARD">Thẻ tín dụng (CREDIT_CARD)</option>
+                            </select>
+                        </div>
+
+                        <!-- Shipment Method -->
+                        <div class="mb-3">
+                            <label for="shipment-method" class="form-label fw-bold">
+                                <i class="fas fa-truck"></i> Phương thức giao hàng
+                            </label>
+                            <select class="form-select" id="shipment-method" required>
+                                <option value="STANDARD" selected>Giao hàng tiêu chuẩn (STANDARD)</option>
+                                <option value="EXPRESS">Giao hàng nhanh (EXPRESS)</option>
+                            </select>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div class="mb-3">
+                            <label for="shipping-address" class="form-label fw-bold">
+                                <i class="fas fa-map-marker-alt"></i> Địa chỉ giao hàng
+                            </label>
+                            <textarea class="form-control" id="shipping-address" rows="3"
+                                placeholder="Nhập địa chỉ giao hàng chi tiết..." required></textarea>
+                            <div class="invalid-feedback">
+                                Vui lòng nhập địa chỉ giao hàng.
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="order-notes" class="form-label fw-bold">
+                                <i class="fas fa-sticky-note"></i> Ghi chú (tùy chọn)
+                            </label>
+                            <textarea class="form-control" id="order-notes" rows="2"
+                                placeholder="Nhập ghi chú đặc biệt cho đơn hàng..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirm-order-btn">
+                        <i class="fas fa-check"></i> Xác nhận đặt hàng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->

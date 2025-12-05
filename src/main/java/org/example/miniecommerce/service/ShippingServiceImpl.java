@@ -22,6 +22,7 @@ public class ShippingServiceImpl implements ShippingService {
     private final OrderLookupService orderLookup;
     private final OrderProcessingMediator mediator;
     private final UserRepository userRepository;
+    private final ShippingFactory shippingFactory;
 
 
     @Override
@@ -33,7 +34,7 @@ public class ShippingServiceImpl implements ShippingService {
             shippedBy = userRepository.findById(req.shippedBy())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
         }
-        Shipping s = ShippingFactory.fromCreateRequest(req, order, shippedBy);
+        Shipping s = shippingFactory.fromCreateRequest(req, order, shippedBy);
         repo.save(s);
 
         // Notify mediator to update order status

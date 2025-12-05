@@ -7,7 +7,11 @@ import org.example.miniecommerce.dto.payment.CreatePaymentRequest;
 import org.example.miniecommerce.dto.shipping.CreateShipmentRequest;
 import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.OrderStatus;
+import org.example.miniecommerce.entity.Payment;
+import org.example.miniecommerce.entity.Shipping;
 import org.example.miniecommerce.repository.OrderRepository;
+import org.example.miniecommerce.repository.PaymentRepository;
+import org.example.miniecommerce.repository.ShippingRepository;
 import org.example.miniecommerce.service.PaymentService;
 import org.example.miniecommerce.service.ShippingService;
 import org.example.miniecommerce.service.UserService;
@@ -34,6 +38,8 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final PaymentService paymentService;
     private final ShippingService shippingService;
+    private final PaymentRepository paymentRepository;
+    private final ShippingRepository shippingRepository;
 
 
     // POST /api/orders - Enhanced with Template Method Pattern
@@ -43,23 +49,26 @@ public class OrderServiceImpl implements OrderService {
         // Use Template Method Pattern for order processing
         Order order = orderProcessor.processOrder(userId, request);
 
-        // Create payment for the order
-        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(
-                order.getId(),
-                request.payment().method()
-        );
-        paymentService.create(paymentRequest);
-
-        // Create shipment for the order
+        // Create shipment for the order (shipping fee will be calculated automatically)
         CreateShipmentRequest shipmentRequest = new CreateShipmentRequest(
                 order.getId(),
                 null, // shippedBy will be set later when assigned
                 request.shipment().address(),
                 request.shipment().method(),
-                BigDecimal.ZERO, // fee will be calculated later
                 request.shipment().notes()
         );
-        shippingService.create(shipmentRequest);
+        Shipping shipping = shippingService.create(shipmentRequest);
+
+        // Calculate total payment amount = order total + shipping fee
+        BigDecimal totalAmount = order.getTotalAmount().add(shipping.getFee());
+
+        // Create payment for the order with calculated amount
+        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(
+                order.getId(),
+                request.payment().method(),
+                totalAmount
+        );
+        paymentService.create(paymentRequest);
 
         return mapToResponse(order);
     }
@@ -109,6 +118,22 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         return mapToResponse(order);
+    }
+
+    // GET /api/orders/{id}/detail - New method for order detail with payment and shipment
+    @Override
+    public OrderDetailResponse getOrderDetailById(Long id, Long userId) {
+        // Validate user exists
+        validateUserExists(userId);
+        
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("You can only view your own orders");
+        }
+        
+        return mapToDetailResponse(order);
     }
 
     // PUT /api/orders/{id}/status - Enhanced with State Pattern
@@ -208,6 +233,70 @@ public class OrderServiceImpl implements OrderService {
                 .map(item -> new OrderItemDto(item.getProductId(), item.getQuantity(), item.getPrice()))
                 .toList();
         return new OrderResponse(order.getId(), order.getUserId(), order.getTotalAmount(), order.getStatus(), items);
+    }
+
+    private OrderDetailResponse mapToDetailResponse(Order order) {
+        List<OrderItemDto> items = order.getItems()
+                .stream()
+                .map(item -> new OrderItemDto(item.getProductId(), item.getQuantity(), item.getPrice()))
+                .toList();
+        
+        // Fetch payment and shipment information
+        PaymentDto paymentDto = getPaymentByOrderId(order.getId());
+        ShipmentDto shipmentDto = getShipmentByOrderId(order.getId());
+        
+        return new OrderDetailResponse(
+                order.getId(),
+                order.getUserId(),
+                order.getTotalAmount(),
+                order.getStatus(),
+                items,
+                paymentDto,
+                shipmentDto
+        );
+    }
+    
+    private PaymentDto getPaymentByOrderId(Long orderId) {
+        List<Payment> payments = paymentRepository.findByOrderId(orderId);
+        if (payments.isEmpty()) {
+            return null;
+        }
+        
+        Payment payment = payments.get(0); // Get the first payment
+        return new PaymentDto(
+                payment.getId(),
+                payment.getOrderId(),
+                payment.getAmount(),
+                payment.getPaymentMethod(),
+                payment.getStatus() != null ? payment.getStatus().name() : null,
+                payment.getFailureReason(),
+                payment.getTransactionId(),
+                payment.getPaidAt(),
+                payment.getCreatedAt(),
+                payment.getUpdatedAt()
+        );
+    }
+    
+    private ShipmentDto getShipmentByOrderId(Long orderId) {
+        List<Shipping> shipments = shippingRepository.findByOrderId(orderId);
+        if (shipments.isEmpty()) {
+            return null;
+        }
+        
+        Shipping shipment = shipments.get(0); // Get the first shipment
+        return new ShipmentDto(
+                shipment.getId(),
+                shipment.getOrderId(),
+                shipment.getAddress(),
+                shipment.getMethod() != null ? shipment.getMethod().name() : null,
+                shipment.getFee(),
+                shipment.getStatus() != null ? shipment.getStatus().name() : null,
+                shipment.getNotes(),
+                shipment.getShippedAt(),
+                shipment.getDeliveredAt(),
+                shipment.getCreatedAt(),
+                shipment.getUpdatedAt()
+        );
     }
 
 

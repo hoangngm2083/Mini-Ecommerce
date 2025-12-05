@@ -3,9 +3,13 @@ package org.example.miniecommerce.service.order;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.miniecommerce.dto.order.*;
+import org.example.miniecommerce.dto.payment.CreatePaymentRequest;
+import org.example.miniecommerce.dto.shipping.CreateShipmentRequest;
 import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.OrderStatus;
 import org.example.miniecommerce.repository.OrderRepository;
+import org.example.miniecommerce.service.PaymentService;
+import org.example.miniecommerce.service.ShippingService;
 import org.example.miniecommerce.service.UserService;
 import org.example.miniecommerce.service.order.decorator.OrderDecoratorManager;
 import org.example.miniecommerce.service.order.decorator.OrderDecoratorName;
@@ -28,6 +32,8 @@ public class OrderServiceImpl implements OrderService {
     private final StandardCreateOrderProcessor orderProcessor;
     private final OrderDecoratorManager decoratorManager;
     private final UserService userService;
+    private final PaymentService paymentService;
+    private final ShippingService shippingService;
 
 
     // POST /api/orders - Enhanced with Template Method Pattern
@@ -36,6 +42,25 @@ public class OrderServiceImpl implements OrderService {
         validateUserExists(userId);
         // Use Template Method Pattern for order processing
         Order order = orderProcessor.processOrder(userId, request);
+
+        // Create payment for the order
+        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(
+                order.getId(),
+                request.payment().method()
+        );
+        paymentService.create(paymentRequest);
+
+        // Create shipment for the order
+        CreateShipmentRequest shipmentRequest = new CreateShipmentRequest(
+                order.getId(),
+                null, // shippedBy will be set later when assigned
+                request.shipment().address(),
+                request.shipment().method(),
+                BigDecimal.ZERO, // fee will be calculated later
+                request.shipment().notes()
+        );
+        shippingService.create(shipmentRequest);
+
         return mapToResponse(order);
     }
 
@@ -184,6 +209,7 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
         return new OrderResponse(order.getId(), order.getUserId(), order.getTotalAmount(), order.getStatus(), items);
     }
+
 
     private void validateUserExists(Long userId) {
         try {

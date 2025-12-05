@@ -2,6 +2,7 @@ package org.example.miniecommerce.factory;
 
 import org.example.miniecommerce.dto.shipping.CreateShipmentRequest;
 import org.example.miniecommerce.dto.shipping.UpdateShipmentRequest;
+import org.example.miniecommerce.dto.shipping.UpdateShipmentType;
 import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.Shipping;
 import org.example.miniecommerce.entity.User;
@@ -27,27 +28,29 @@ public class ShippingFactory {
     }
 
     public static void applyUpdate(Shipping s, UpdateShipmentRequest req, User shippedBy) {
-        if (shippedBy != null) {
-            s.setShippedBy(shippedBy);
-            s.setShippedById(shippedBy.getId());
-        }
-        if (req.method() != null) {
-            Shipping.Method newMethod = Shipping.Method.valueOf(req.method().toUpperCase());
-            s.setMethod(newMethod);
-        }
-        if (req.fee() != null) s.setFee(req.fee());
-        if (req.status() != null) {
-            Shipping.Status newStatus = Shipping.Status.valueOf(req.status().toUpperCase());
-            s.setStatus(newStatus);
-
-            if (newStatus == Shipping.Status.SHIPPING && s.getShippedAt() == null) {
-                s.setShippedAt(LocalDateTime.now());
-            } else if (newStatus == Shipping.Status.COMPLETED && s.getDeliveredAt() == null) {
-                s.setDeliveredAt(LocalDateTime.now());
+        if (req.type() == UpdateShipmentType.ASSIGN_TASK) {
+            // Khi nhân viên nhận task: update shipped_by, status, shipped_at
+            if (shippedBy != null) {
+                s.setShippedBy(shippedBy);
+                s.setShippedById(shippedBy.getId());
             }
-
+            if (req.status() != null) {
+                Shipping.Status newStatus = Shipping.Status.valueOf(req.status().toUpperCase());
+                s.setStatus(newStatus);
+                if (newStatus == Shipping.Status.SHIPPING && s.getShippedAt() == null) {
+                    s.setShippedAt(LocalDateTime.now());
+                }
+            }
+        } else if (req.type() == UpdateShipmentType.COMPLETE_TASK) {
+            // Khi nhân viên hoàn thành task: update status, delivered_at
+            if (req.status() != null) {
+                Shipping.Status newStatus = Shipping.Status.valueOf(req.status().toUpperCase());
+                s.setStatus(newStatus);
+                if (newStatus == Shipping.Status.COMPLETED && s.getDeliveredAt() == null) {
+                    s.setDeliveredAt(LocalDateTime.now());
+                }
+            }
         }
-        if (req.address() != null) s.setAddress(req.address());
-        if (req.notes() != null) s.setNotes(req.notes());
+
     }
 }

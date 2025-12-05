@@ -7,7 +7,7 @@ import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.Payment;
 import org.example.miniecommerce.factory.PaymentFactory;
 import org.example.miniecommerce.repository.PaymentRepository;
-import org.example.miniecommerce.service.order.OrderService;
+import org.example.miniecommerce.mediator.OrderProcessingMediator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +19,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository repo;
     private final OrderLookupService orderLookup;
-    private final OrderService orderService;
+    private final OrderProcessingMediator mediator;
 
     @Override
     @Transactional
@@ -64,12 +64,13 @@ public class PaymentServiceImpl implements PaymentService {
                 p.setStatus(Payment.Status.SUCCESS);
                 p.setPaidAt(LocalDateTime.now());
 
-                // Update order status separately
-                orderService.handlePaymentSuccess(p.getOrderId());
+                // Notify mediator to update order status
+                mediator.notifyPaymentConfirmed(p, true);
 
-                log.info("[confirm] Order status updated to PAID: orderId = {}", p.getOrderId());
+                log.info("[confirm] Payment confirmed successfully: paymentId = {}, orderId = {}", p.getId(), p.getOrderId());
             } else {
                 p.setStatus(Payment.Status.FAILED);
+                mediator.notifyPaymentConfirmed(p, false);
             }
             log.info("[confirm] After status update: status = {}, paidAt = {}", p.getStatus(), p.getPaidAt());
         } catch (Exception e) {

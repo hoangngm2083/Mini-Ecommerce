@@ -20,19 +20,17 @@ public abstract class CreateOrderProcessor {
         // Step 2: Check inventory
         checkInventory(request);
 
-
         // Step 3: Create order with userId
         Order originalOrder = createOrder(userId, request);
 
         // Step 4: Calculate total additional costs
         Order updatedOrder = calculateTotalAdditionalCosts(originalOrder);
 
-        // Step 6: Deduct inventory after successful order creation
+        // Step 5: Deduct inventory after successful order creation
         deductInventory(updatedOrder);
 
-        // Step 5: Save order to db
+        // Step 6: Save order to db
         saveOrder(updatedOrder);
-
 
         return updatedOrder;
     }

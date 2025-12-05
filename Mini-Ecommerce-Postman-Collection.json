@@ -335,6 +335,7 @@
     },
     {
       "name": "3. Order Management",
+      "description": "Complete order lifecycle with integrated payment and shipping. Order includes items, payment method, and shipping details.",
       "item": [
         {
           "name": "Create Order",
@@ -368,7 +369,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"productId\": {{product_id}},\n      \"quantity\": 2\n    }\n  ]\n}"
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": {{product_id}},\n      \"quantity\": 2\n    }\n  ],\n  \"payment\": {\n    \"method\": \"CREDIT_CARD\"\n  },\n  \"shipment\": {\n    \"address\": \"123 Main Street, Ho Chi Minh City\",\n    \"method\": \"STANDARD\",\n    \"notes\": \"Please handle with care\"\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/orders",
@@ -578,6 +579,7 @@
     },
     {
       "name": "5. Shipping Management",
+      "description": "Shipping workflow: 1) Create shipment (status: CREATED), 2) Assign to employee (ASSIGN_TASK, status: SHIPPING), 3) Employee completes delivery (COMPLETE_TASK, status: COMPLETED)",
       "item": [
         {
           "name": "Create Shipment",
@@ -606,7 +608,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": {{order_id}},\n  \"address\": \"123 Main Street\",\n  \"city\": \"Ho Chi Minh City\",\n  \"postalCode\": \"70000\",\n  \"country\": \"Vietnam\"\n}"
+              "raw": "{\n  \"orderId\": {{order_id}},\n  \"address\": \"123 Main Street, Ho Chi Minh City\",\n  \"method\": \"STANDARD\",\n  \"fee\": 50000,\n  \"notes\": \"Handle with care\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/shipments",
@@ -623,18 +625,23 @@
           "response": []
         },
         {
-          "name": "Update Shipment Status - In Transit",
+          "name": "Assign Shipment Task",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "userId",
+                "value": "{{user_id}}",
+                "description": "User ID of the employee assigning the task"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"trackingNumber\": \"VN123456789\"\n}"
+              "raw": "{\n  \"type\": \"ASSIGN_TASK\",\n  \"status\": \"SHIPPING\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/shipments/{{shipment_id}}",
@@ -647,23 +654,28 @@
                 "{{shipment_id}}"
               ]
             },
-            "description": "Update shipment status to in transit"
+            "description": "Assign shipment task to an employee (status must be CREATED)"
           },
           "response": []
         },
         {
-          "name": "Update Shipment Status - Delivered",
+          "name": "Complete Shipment Task",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "userId",
+                "value": "{{user_id}}",
+                "description": "User ID of the employee completing the task (must match assigned employee)"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"DELIVERED\",\n  \"deliveredAt\": \"2024-12-02T10:00:00Z\"\n}"
+              "raw": "{\n  \"type\": \"COMPLETE_TASK\",\n  \"status\": \"COMPLETED\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/shipments/{{shipment_id}}",
@@ -676,7 +688,75 @@
                 "{{shipment_id}}"
               ]
             },
-            "description": "Update shipment status to delivered"
+            "description": "Complete shipment task (status must be SHIPPING, only assigned employee can complete)"
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Shipment Task",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "userId",
+                "value": "{{user_id}}",
+                "description": "User ID passed in header"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"ASSIGN_TASK\",\n  \"status\": \"SHIPPING\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/shipments/{{shipment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "shipments",
+                "{{shipment_id}}"
+              ]
+            },
+            "description": "Assign shipment task to an employee (status must be CREATED)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Complete Task - Wrong Employee (Should Fail)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "userId",
+                "value": "999",
+                "description": "Wrong user ID that doesn't match assigned employee"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"COMPLETE_TASK\",\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/shipments/{{shipment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "shipments",
+                "{{shipment_id}}"
+              ]
+            },
+            "description": "Test validation: only assigned employee can complete task (should return 400 Bad Request)"
           },
           "response": []
         }

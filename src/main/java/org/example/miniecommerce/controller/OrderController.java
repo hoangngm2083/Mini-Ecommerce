@@ -34,10 +34,16 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getMyOrders(Long.parseLong(userId)));
     }
 
+    // @GetMapping("/{id}")
+    // public ResponseEntity<OrderResponse> getOrder(@PathVariable @NotNull Long id,
+    //         @RequestHeader @NotBlank String userId) {
+    //     return ResponseEntity.ok(orderService.getOrderById(id, Long.parseLong(userId)));
+    // }
+
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> getOrder(@PathVariable @NotNull Long id,
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable @NotNull Long id,
             @RequestHeader @NotBlank String userId) {
-        return ResponseEntity.ok(orderService.getOrderById(id, Long.parseLong(userId)));
+        return ResponseEntity.ok(orderService.getOrderDetailById(id, Long.parseLong(userId)));
     }
 
     @PutMapping("/{id}/status")

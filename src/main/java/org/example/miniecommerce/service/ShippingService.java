@@ -6,5 +6,6 @@ import org.example.miniecommerce.entity.Shipping;
 
 public interface ShippingService {
     Shipping create(CreateShipmentRequest req);
-    Shipping update(Long id, UpdateShipmentRequest req);
+    Shipping update(Long id, UpdateShipmentRequest req, Long userId);
+    java.math.BigDecimal getFeeByMethod(String method);
 }

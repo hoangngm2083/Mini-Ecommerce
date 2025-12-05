@@ -19,6 +19,9 @@ public interface OrderService {
 
     OrderResponse getOrderById(Long id);
 
+    // GET /api/orders/{id}/detail - New endpoint for order with payment and shipment details
+    OrderDetailResponse getOrderDetailById(Long id, Long userId);
+
     // PUT /api/orders/{id}/status
     OrderStatusResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long userId);
 

@@ -17,26 +17,72 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white text-center">
-                        <h4><i class="fas fa-sign-in-alt"></i> Đăng nhập</h4>
+                        <h4 id="auth-title"><i class="fas fa-sign-in-alt"></i> Đăng nhập</h4>
                     </div>
                     <div class="card-body">
+                        <!-- Login Form -->
                         <form id="login-form">
                             <div class="mb-3">
-                                <label for="username" class="form-label">Tên đăng nhập</label>
-                                <input type="text" class="form-control" id="username" required>
+                                <label for="login-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="login-email" placeholder="Nhập email của bạn" required>
                             </div>
                             <div class="mb-3">
-                                <label for="password" class="form-label">Mật khẩu</label>
-                                <input type="password" class="form-control" id="password" required>
+                                <label for="login-password" class="form-label">Mật khẩu</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="login-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('login-password')">
+                                        <i class="fas fa-eye" id="login-password-icon"></i>
+                                    </button>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary w-100" id="login-btn">
                                 <i class="fas fa-sign-in-alt"></i> Đăng nhập
                             </button>
                         </form>
 
+                        <!-- Register Form -->
+                        <form id="register-form" class="d-none">
+                            <div class="mb-3">
+                                <label for="register-name" class="form-label">Họ và tên</label>
+                                <input type="text" class="form-control" id="register-name" placeholder="Nhập họ và tên" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="register-email" placeholder="Nhập email của bạn" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-password" class="form-label">Mật khẩu</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="register-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('register-password')">
+                                        <i class="fas fa-eye" id="register-password-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-confirm-password" class="form-label">Xác nhận mật khẩu</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="register-confirm-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('register-confirm-password')">
+                                        <i class="fas fa-eye" id="register-confirm-password-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100" id="register-btn">
+                                <i class="fas fa-user-plus"></i> Đăng ký
+                            </button>
+                        </form>
+
                         <hr class="my-3">
+                        
+                        <!-- Toggle between Login/Register -->
                         <div class="text-center">
-                            <small class="text-muted">Demo: admin / admin123</small>
+                            <small class="text-muted" id="login-demo">Demo: admin@example.com / admin123</small>
+                            <div class="mt-2">
+                                <button class="btn btn-link btn-sm" id="toggle-auth-btn" onclick="toggleAuthForm()">
+                                    <span id="toggle-auth-text">Chưa có tài khoản? Đăng ký ngay</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -164,6 +210,89 @@
                             <p class="mt-2">Đang tải đơn hàng...</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Form Modal -->
+    <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderModalLabel">
+                        <i class="fas fa-shopping-cart"></i> Xác nhận đặt hàng
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="order-form">
+                        <div class="row">
+                            <!-- Left Column: Order Items Summary -->
+                            <div class="col-md-5">
+                                <div class="mb-4">
+                                    <h6 class="mb-3">Sản phẩm đã chọn:</h6>
+                                    <div id="order-items-summary" class="border rounded p-3 bg-light">
+                                        <!-- Order items will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Form Fields -->
+                            <div class="col-md-7">
+                                <!-- Payment Method -->
+                                <div class="mb-3">
+                                    <label for="payment-method" class="form-label fw-bold">
+                                        <i class="fas fa-credit-card"></i> Phương thức thanh toán
+                                    </label>
+                                    <select class="form-select" id="payment-method" required>
+                                        <option value="CASH" selected>Tiền mặt (CASH)</option>
+                                        <option value="CREDIT_CARD">Thẻ tín dụng (CREDIT_CARD)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Shipment Method -->
+                                <div class="mb-3">
+                                    <label for="shipment-method" class="form-label fw-bold">
+                                        <i class="fas fa-truck"></i> Phương thức giao hàng
+                                    </label>
+                                    <select class="form-select" id="shipment-method" required>
+                                        <option value="STANDARD" selected>Giao hàng tiêu chuẩn (STANDARD)</option>
+                                        <option value="EXPRESS">Giao hàng nhanh (EXPRESS)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Shipping Address -->
+                                <div class="mb-3">
+                                    <label for="shipping-address" class="form-label fw-bold">
+                                        <i class="fas fa-map-marker-alt"></i> Địa chỉ giao hàng
+                                    </label>
+                                    <textarea class="form-control" id="shipping-address" rows="3"
+                                        placeholder="Nhập địa chỉ giao hàng chi tiết..." required></textarea>
+                                    <div class="invalid-feedback">
+                                        Vui lòng nhập địa chỉ giao hàng.
+                                    </div>
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="mb-3">
+                                    <label for="order-notes" class="form-label fw-bold">
+                                        <i class="fas fa-sticky-note"></i> Ghi chú (tùy chọn)
+                                    </label>
+                                    <textarea class="form-control" id="order-notes" rows="2"
+                                        placeholder="Nhập ghi chú đặc biệt cho đơn hàng..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirm-order-btn">
+                        <i class="fas fa-check"></i> Xác nhận đặt hàng
+                    </button>
                 </div>
             </div>
         </div>

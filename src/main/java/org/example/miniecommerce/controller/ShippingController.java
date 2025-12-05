@@ -1,6 +1,7 @@
 package org.example.miniecommerce.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.example.miniecommerce.dto.shipping.CreateShipmentRequest;
 import org.example.miniecommerce.dto.shipping.ShipmentResponse;
 import org.example.miniecommerce.dto.shipping.UpdateShipmentRequest;
@@ -29,9 +30,19 @@ public class ShippingController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<ShipmentResponse> update(@PathVariable Long id,
-            @RequestBody UpdateShipmentRequest req) {
+            @RequestBody UpdateShipmentRequest req,
+            @RequestHeader @NotBlank String userId) {
 
-        Shipping s = svc.update(id, req);
+        Shipping s = svc.update(id, req, Long.parseLong(userId));
         return ResponseEntity.ok(ShippingMapper.toResponse(s));
+    }
+
+    @GetMapping("/fee")
+    public ResponseEntity<?> getShippingFee(@RequestParam String method) {
+        java.math.BigDecimal fee = svc.getFeeByMethod(method);
+        return ResponseEntity.ok(java.util.Map.of(
+            "method", method,
+            "fee", fee
+        ));
     }
 }

@@ -641,7 +641,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"type\": \"ASSIGN_TASK\",\n  \"shippedBy\": {{user_id}},\n  \"status\": \"SHIPPING\"\n}"
+              "raw": "{\n  \"type\": \"ASSIGN_TASK\",\n  \"status\": \"SHIPPING\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/shipments/{{shipment_id}}",
@@ -709,7 +709,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"type\": \"ASSIGN_TASK\",\n  \"shippedBy\": {{user_id}},\n  \"status\": \"SHIPPING\"\n}"
+              "raw": "{\n  \"type\": \"ASSIGN_TASK\",\n  \"status\": \"SHIPPING\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/shipments/{{shipment_id}}",

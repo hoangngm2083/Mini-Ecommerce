@@ -8,9 +8,9 @@ import org.example.miniecommerce.entity.Order;
 import org.example.miniecommerce.entity.Shipping;
 import org.example.miniecommerce.entity.User;
 import org.example.miniecommerce.factory.ShippingFactory;
+import org.example.miniecommerce.mediator.OrderProcessingMediator;
 import org.example.miniecommerce.repository.ShippingRepository;
 import org.example.miniecommerce.repository.UserRepository;
-import org.example.miniecommerce.mediator.OrderProcessingMediator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,7 +60,8 @@ public class ShippingServiceImpl implements ShippingService {
             }
         } else if (req.type() == UpdateShipmentType.COMPLETE_TASK) {
             // For COMPLETE_TASK: validate userId matches shippedBy and status is SHIPPING
-            if (s.getShippedById() == null || !s.getShippedById().equals(userId)) {
+            if (s.getShippedById() == null || !s.getShippedById()
+                    .equals(userId)) {
                 throw new IllegalArgumentException("Chỉ nhân viên được assign mới có thể hoàn thành task!");
             }
             if (s.getStatus() != Shipping.Status.SHIPPING) {
@@ -68,12 +69,12 @@ public class ShippingServiceImpl implements ShippingService {
             }
         }
 
-        User shippedBy = null;
-        if (req.shippedBy() != null) {
-            shippedBy = userRepository.findById(req.shippedBy())
-                    .orElseThrow(() -> new IllegalArgumentException("Nhân viên không tồn tại!"));
-        }
-
+        // Get user from userId (from header) instead of req.shippedBy()
+        User shippedBy = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Nhân viên không tồn tại!"));
+        // if (!"STAFF".equals(userRole)) {
+        //     throw new IllegalArgumentException("Chỉ nhân viên (STAFF) mới có thể thực hiện thao tác giao hàng!");
+        // }
         ShippingFactory.applyUpdate(s, req, shippedBy);
 
         // Notify mediator to update order status
